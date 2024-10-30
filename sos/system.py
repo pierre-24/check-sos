@@ -1,14 +1,18 @@
 import collections
 import itertools
 import math
-from typing import Tuple, List, Iterable
-
+import enum
 import more_itertools
 import numpy
+
+from typing import List, Iterable
 from numpy.typing import NDArray
 
 
 class ComponentsIterator:
+    """Iterate over (unique) components of a NLO tensor
+    """
+
     def __init__(self, input_fields: Iterable[int]):
         self.fields = [-sum(input_fields)] + list(input_fields)
 
@@ -79,52 +83,116 @@ class ComponentsIterator:
         yield from self._iter_reordered(perms)
 
 
+class SOSMethod(enum.Enum):
+    GENERAL = enum.auto
+    FLUCTUATION = enum.auto
+
+
 class System:
-    def __init__(self, energies: List[float], dipoles: NDArray):
-        energies.insert(0, 0)
+    """A system, represented by a list of excitation energies and corresponding transition dipoles
+    """
 
-        assert len(energies) == dipoles.shape[0]
+    def __init__(self, e_exci: List[float], t_dips: NDArray):
 
-        self.e_exci = numpy.array(energies)
-        self.t_dips = dipoles
+        assert len(e_exci) == t_dips.shape[0] - 1
+
+        e_exci.insert(0, 0)
+
+        self.e_exci = numpy.array(e_exci)
+        self.t_dips = t_dips
 
     def __len__(self):
         return len(self.e_exci)
 
-    def response_tensor_g(self, input_fields: Tuple[int] = (1, 1), frequency: float = 0) -> NDArray:
-        """Get a response tensor, using the most generic SOS formula
-
-        :param input_fields: input fields
-        :param frequency: input frequency
+    def response_tensor(
+            self, input_fields: tuple = (1, 1), frequency: float = 0, method: SOSMethod = SOSMethod.GENERAL) -> NDArray:
+        """Get a response tensor, a given SOS formula
         """
 
-        t = numpy.zeros(numpy.repeat(3, len(input_fields)))
+        compute_component = {
+            SOSMethod.GENERAL: self.response_tensor_element_g,
+            SOSMethod.FLUCTUATION: self.response_tensor_element_f
+        }[method]
+
         it = ComponentsIterator(input_fields)
+        t = numpy.zeros(numpy.repeat(3, len(it.fields)))
         e_fields = list(i * frequency for i in it.fields)
 
         for c in it:
-            to_permute = list(zip(c, e_fields))
-            num_perm = numpy.prod([math.factorial(i) for i in collections.Counter(to_permute).values()])
-            component = .0
-
-            for p in more_itertools.unique_everseen(itertools.permutations(to_permute)):
-                for states in itertools.product(range(1, len(self)), repeat=len(input_fields)):
-                    stx = list(states)
-                    stx.append(0)
-                    stx.insert(0, 0)
-
-                    fnum = numpy.prod([
-                        self.t_dips[stx[i], stx[i + 1], p[i][0]] - (
-                            0 if stx[i] != stx[i + 1]
-                            else self.t_dips[0, 0, p[i][0]]
-                        ) for i in range(len(input_fields) + 1)
-                    ])
-
-                    fden = numpy.prod([self.e_exci[e] - self.e_exci[0] - p[i][1] for i, e in enumerate(states)])
-
-                    component += fnum / fden
+            component = compute_component(c, e_fields)
 
             for ce in it.reverse(c):
-                t[ce] = component * num_perm
+                t[ce] = component
 
         return t
+
+    def response_tensor_element_g(self, component: tuple, e_fields: List[float]) -> float:
+        """Compute the value of a component of a response tensor, using the most generic formula
+        """
+
+        print('g')
+
+        assert len(component) == len(e_fields)
+
+        value = .0
+
+        to_permute = list(zip(component, e_fields))
+        num_perm = numpy.prod([math.factorial(i) for i in collections.Counter(to_permute).values()])
+
+        for p in more_itertools.unique_everseen(itertools.permutations(to_permute)):
+            for states in itertools.product(range(0, len(self)), repeat=len(component) - 1):
+                stx = list(states)
+                stx.append(0)
+                stx.insert(0, 0)
+
+                dips = [self.t_dips[stx[i], stx[i + 1], p[i][0]] for i in range(len(component))]
+                print(p, states, dips)
+
+                ens = [
+                    self.e_exci[e] + sum(p[j][1] for j in range(i + 1)) for i, e in enumerate(states)
+                ]
+
+                print(ens)
+
+                value += numpy.prod(dips) / numpy.prod(ens)
+
+        return value * num_perm
+
+    def response_tensor_element_f(self, component: tuple, e_fields: List[float]) -> float:
+        """Compute the value of a component of a response tensor, using fluctuation dipoles.
+        Does not work for `len(component) > 3`.
+        """
+
+        print('f')
+
+        assert len(component) == len(e_fields)
+
+        value = .0
+
+        to_permute = list(zip(component, e_fields))
+        num_perm = numpy.prod([math.factorial(i) for i in collections.Counter(to_permute).values()])
+
+        for p in more_itertools.unique_everseen(itertools.permutations(to_permute)):
+            for states in itertools.product(range(1, len(self)), repeat=len(component) - 1):
+                stx = list(states)
+                stx.append(0)
+                stx.insert(0, 0)
+
+                dips = [
+                    self.t_dips[stx[i], stx[i + 1], p[i][0]] - (
+                        0 if stx[i] != stx[i + 1]
+                        else self.t_dips[0, 0, p[i][0]]
+                    ) for i in range(len(component))
+                ]
+
+                print(p, states, dips)
+
+                ens = [
+                    self.e_exci[e] + sum(p[j][1] for j in range(i + 1)) for i, e in enumerate(states)
+                ]
+
+                print(ens)
+
+                value += numpy.prod(dips) / numpy.prod(ens)
+
+        return value * num_perm
