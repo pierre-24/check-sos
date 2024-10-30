@@ -1,3 +1,3 @@
 # check-sos
 
-Let's figure out SOS.
+Let's figure out SOS... Once again ;)

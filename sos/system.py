@@ -127,7 +127,7 @@ class System:
         return t
 
     def response_tensor_element_g(self, component: tuple, e_fields: List[float]) -> float:
-        """Compute the value of a component of a response tensor, using the most generic formula
+        """Compute the value of a component of a response tensor, using the most generic formula, Eq. (1) of text.
         """
 
         print('g')
@@ -160,7 +160,7 @@ class System:
 
     def response_tensor_element_f(self, component: tuple, e_fields: List[float]) -> float:
         """Compute the value of a component of a response tensor, using fluctuation dipoles.
-        Does not work for `len(component) > 3`.
+        Does not work for `len(component) > 3`, since it only include the non-secular terms.
         """
 
         print('f')
