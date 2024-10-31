@@ -34,7 +34,7 @@ def test_3_states():
 
     system = System([.5, .7], t_dips_3s)
 
-    w = .1
+    w = .2
 
     assert (
         system.response_tensor_element_g((0, 0), [-w, w]) ==
