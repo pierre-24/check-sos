@@ -85,7 +85,7 @@ class ComponentsIterator:
 
 class SOSMethod(enum.Enum):
     GENERAL = enum.auto
-    FLUCTUATION = enum.auto
+    FLUCTUATION_DIVERGENT = enum.auto
 
 
 class System:
@@ -111,7 +111,7 @@ class System:
 
         compute_component = {
             SOSMethod.GENERAL: self.response_tensor_element_g,
-            SOSMethod.FLUCTUATION: self.response_tensor_element_f
+            SOSMethod.FLUCTUATION_DIVERGENT: self.response_tensor_element_f
         }[method]
 
         it = ComponentsIterator(input_fields)
@@ -130,8 +130,6 @@ class System:
         """Compute the value of a component of a response tensor, using the most generic formula, Eq. (1) of text.
         """
 
-        print('g')
-
         assert len(component) == len(e_fields)
 
         value = .0
@@ -146,26 +144,26 @@ class System:
                 stx.insert(0, 0)
 
                 dips = [self.t_dips[stx[i], stx[i + 1], p[i][0]] for i in range(len(component))]
-                print(p, states, dips)
 
                 ens = [
                     self.e_exci[e] + sum(p[j][1] for j in range(i + 1)) for i, e in enumerate(states)
                 ]
 
-                print(ens)
-
                 value += numpy.prod(dips) / numpy.prod(ens)
 
         return value * num_perm
 
-    def response_tensor_element_f(self, component: tuple, e_fields: List[float]) -> float:
-        """Compute the value of a component of a response tensor, using fluctuation dipoles.
-        Does not work for `len(component) > 3`, since it only include the non-secular terms.
+    def response_tensor_element_f(self, component: tuple, e_fields: List[float], use_divergent: bool = True) -> float:
+        """
+        Compute the value of a component of a response tensor, using fluctuation dipoles.
+        It corresponds to Eq. (8) of the text.
+
+        Note: it breaks for n > 6, since `(ab)_a1(cd)_a3(efg)_a5a6` appears and that I did not yet implement a
+        general scheme.
         """
 
-        print('f')
-
         assert len(component) == len(e_fields)
+        assert len(e_fields) < 7
 
         value = .0
 
@@ -185,14 +183,54 @@ class System:
                     ) for i in range(len(component))
                 ]
 
-                print(p, states, dips)
+                ens = [
+                    self.e_exci[e] + sum(p[j][1] for j in range(i + 1)) for i, e in enumerate(states)
+                ]
+
+                value += numpy.prod(dips) / numpy.prod(ens)
+
+        if len(component) > 3:
+            for set_g in range(1, len(component) - 2):
+                if use_divergent:
+                    value += self._secular_term_divergent(component, e_fields, (set_g, ))
+
+        if len(component) == 6:
+            value += self._secular_term_divergent(component, e_fields, (1, 3))
+
+        return value * num_perm
+
+    def _secular_term_divergent(self, component: tuple, e_fields: List[float], set_ground: tuple) -> float:
+        """Compute the additional secular term that happen when n > 2, but using a divergent definition.
+
+        Implements parts of the Eq. (10) of the text, by setting the term a_i for all i in `set_ground`
+        to the ground state.
+        """
+
+        value = .0
+        to_permute = list(zip(component, e_fields))
+
+        for p in more_itertools.unique_everseen(itertools.permutations(to_permute)):
+            for states in itertools.product(range(1, len(self)), repeat=len(component) - 1 - len(set_ground)):
+                states = list(states)
+
+                for g in set_ground:
+                    states.insert(g, 0)
+
+                stx = list(states)
+                stx.append(0)
+                stx.insert(0, 0)
+
+                dips = [
+                    self.t_dips[stx[i], stx[i + 1], p[i][0]] - (
+                        0 if stx[i] != stx[i + 1]
+                        else self.t_dips[0, 0, p[i][0]]
+                    ) for i in range(len(component))
+                ]
 
                 ens = [
                     self.e_exci[e] + sum(p[j][1] for j in range(i + 1)) for i, e in enumerate(states)
                 ]
 
-                print(ens)
-
                 value += numpy.prod(dips) / numpy.prod(ens)
 
-        return value * num_perm
+        return value
