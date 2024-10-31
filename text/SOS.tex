@@ -14,16 +14,20 @@
 \begin{document}
 \maketitle
 
+\allowdisplaybreaks
 \onehalfspacing
 
 On the ground of perturbation theory, 
 the SOS expression of Orr and Ward \cite{orrPerturbationTheoryNonlinear1971} (see also Bishop \cite{bishopExplicitNondivergentFormulas1994}) states that any component of any nonlinear optical tensor $\chi^{(n)}(-\omega_\sigma;\omega_1,\ldots)$ (of order $n$)\footnote{I'm aware that $\chi$ is generaly used to refer to the nonlinear susceptibility, the macroscopic equivalent of what I'm discussing here, but I needed a greek letter.} is given by:\begin{align}
 &\chi^{(n)}_{\zeta\eta\ldots\nu}(-\omega_\sigma;\omega_1,\ldots) = \hbar^{-n}\sum_\mathcal{P}\sum_{a_1,a_2\ldots\,a_{n}} \frac{\mu^\zeta_{0a_1}{\mu}^\eta_{a_1a_2}\ldots \mu^\nu_{a_{n\,0}}}{\prod_{0<i\leq n} (\omega_{a_i}-\omega_\sigma+\sum_{0<j<i} \omega_j)},\label{eq:1:sos}
 \end{align}
-where $\zeta,\eta,\ldots$ are the Cartesian coordinates $x, y, z$ (in the molecular frame), $\omega_1, \omega_2\ldots$, the (optical) input frequencies of the laser for the NLO process (with $\omega_\sigma = \sum_{0<i<n} \omega_i$), $\ket{a_1}, \ket{a_2}, \ldots$, the states of the system  \textbf{including the ground state} (with $\hbar\omega_{a_i}$ the excitation energy from ground state, noted  $\ket{0}$, to $\ket{a_i}$), $\mu^\zeta_{a_ia_j} = \braket{a_i|\hat \zeta|a_j}$ the transition dipole moment from state $a_i$ to $a_j$ (it corresponds to the dipole moment of electronic state $a_i$ when $i=j$), and $\sum_\mathcal{P}$ the sum of the different permutations over each pair $(\zeta, \omega_\sigma),(\eta,\omega_1),\ldots$. Given the form of Eq.~\eqref{eq:1:sos}, it is relatively easy to write a (Python) code that compute any $\chi^{(n)}$.
+where $\zeta,\eta,\ldots$ are the Cartesian coordinates $x, y, z$ (in the molecular frame), $\omega_1, \omega_2\ldots$, the (optical) input frequencies of the laser for the NLO process (with $\omega_\sigma = \sum_{0<i<n} \omega_i$), $\ket{a_1}, \ket{a_2}, \ldots$, the states of the system  \textbf{including the ground state} (with $\hbar\omega_{a_i}$ the excitation energy from ground state, noted  $\ket{0}$, to $\ket{a_i}$), $\mu^\zeta_{a_ia_j} = \braket{a_i|\hat \zeta|a_j}$ the transition dipole moment from state $a_i$ to $a_j$ (it corresponds to the dipole moment of electronic state $a_i$ when $i=j$), and $\sum_\mathcal{P}$ the sum of the different permutations over each pair $(\zeta, \omega_\sigma),(\eta,\omega_1),\ldots$. 
 
+Given the form of Eq.~\eqref{eq:1:sos}, it is relatively easy to write a (Python) code that compute any $\chi^{(n)}$. However, doing so requires care, since this expression blow up when any $\omega_i = 0$. The goal of this document is to find alternative formulas, while retaining generality.
 
-\section{Avoiding secular divergence: using fluctuation dipole}
+\section{Theory}
+
+\subsection{Avoiding secular divergence: using fluctuation dipole}
 
 Examining the expressions for $n\in[1,3]$ more closely, one has:
 \begin{align}
@@ -49,22 +53,70 @@ Applying this procedure to Eq.~\eqref{eq:sos:gamma} introduces an error in cases
 \end{align}
 where $\gamma^{(+)}$ corresponds to the expression when summing over all non-ground states, while $\gamma^{(-)}$ is a correction term, obtained by setting $\ket{a_2} = \ket{0}$ in the expression of $\gamma^{(+)}$. However, these (so-called) secular terms, grouped in $\gamma^{(-)}$, lead to divergence if the conditions $-\omega_\sigma + \omega_1 = \omega_2 + \omega_3 = 0$ is satisfied, even though the ground state is excluded from the summation.
 
-Before addressing this correction in detail, note that a generalization of this procedure yields \begin{equation}
-	\chi^{(n)}_{\zeta \eta \ldots \nu}(-\omega_\sigma; \omega_1, \ldots)  = \chi^{(n',+)}_{\zeta \eta \ldots \nu}(-\omega_\sigma; \omega_1, \ldots)  + \chi^{(n',-)}_{\zeta \eta \ldots \nu}(-\omega_\sigma; \omega_1, \ldots) ,\label{eq:fluct}
-\end{equation} where $\chi^{(n',+)}$ represents the non-secular contributions, given by:
+Before addressing this divergence in detail, note that a generalization of this procedure yields \begin{equation}
+	\chi^{(n)}_{\zeta \eta \ldots \nu}(-\omega_\sigma; \omega_1, \ldots)  = \chi^{(n,+)}_{\zeta \eta \ldots \nu}(-\omega_\sigma; \omega_1, \ldots)  + \chi^{(n,-)}_{\zeta \eta \ldots \nu}(-\omega_\sigma; \omega_1, \ldots) ,\label{eq:fluct}
+\end{equation} where $\chi^{(n,+)}$ represents the non-secular contributions, given by:
 \begin{align}
-	\chi^{(n',+)}_{\zeta \eta \ldots \nu}(-\omega_\sigma; \omega_1, \ldots) = \hbar^{-n} \sum_\mathcal{P} \sum_{a_1', a_2', \ldots} \frac{(\zeta \bar{\eta} \bar{\kappa} \ldots \nu)_{a_1 a_2 \ldots a_n}}{\prod_{0 < i \leq n} \omega_{a_i}'} ,\label{eq:fluct:nonsecular}
+	\chi^{(n,+)}_{\zeta \eta \ldots \nu}(-\omega_\sigma; \omega_1, \ldots) = \hbar^{-n} \sum_\mathcal{P} \sum_{a_1', a_2', \ldots} \frac{(\zeta \bar{\eta} \bar{\kappa} \ldots \nu)_{a_1 a_2 \ldots a_n}}{\prod_{0 < i \leq n} \omega_{a_i}'} ,\label{eq:fluct:nonsecular}
 \end{align}
 which follows directly from Eq.~\eqref{eq:1:sos}, with the summation now excluding the ground state. Here, the notation $\omega_{a_i}' = \omega_{a_i} - \omega_\sigma + \sum_{0 < j < i} \omega_j$ is introduced, which will be useful next.
-The secular contributions, $\chi^{(n',-)}$, are given by:
+The secular contributions, $\chi^{(n,-)}$, are given by:
 \begin{align}
-	\chi^{(n',-)} = \sum_{1 < i < n} \left[ \left. \chi^{(n',+)} \right|_{\ket{a_i} = \ket{0}} + \sum_{i+1 < j < n} \left( \left. \chi^{(n',+)} \right|_{\ket{a_i} = \ket{a_j} = \ket{0}} + \ldots \right) \right],\label{eq:fluct:secular}
+	\chi^{(n,-)} = \sum_{1 < i < n} \left[ \left. \chi^{(n,+)} \right|_{\ket{a_i} = \ket{0}} + \sum_{i+1 < j < n} \left( \left. \chi^{(n,+)} \right|_{\ket{a_i} = \ket{a_j} = \ket{0}} + \ldots \right) \right],\label{eq:fluct:secular}
 \end{align}
 where Cartesian indices and laser frequencies have been omitted for clarity. The notation $\ket{a_i} = \ket{a_j} = \ket{0}$ specifies that both states $\ket{a_i}$ and $\ket{a_j}$ are evaluated as the ground state in Eq.~\eqref{eq:fluct:nonsecular}. The number of secular terms increases with $n$, as higher-order interactions introduce additional configurations in which intermediate states are the ground state. 
 
 After theses formula have been implemented, comparisons between Eq.~\eqref{eq:1:sos} and Eq.~\eqref{eq:fluct} have been successfully conducted to get tensors, $\chi^{(n)}$ corresponding to $n$\textsuperscript{th}-harmonic generation process (where all $\omega_i = \omega$), up to $n = 6$ (which includes a secular term where $\ket{a_2} = \ket{a_4} = \ket{0}$), within both two- and three-state models.
 
+\subsection{Non-divergent secular terms}
 
+According to Bishop \cite{bishopExplicitNondivergentFormulas1994}, to avoid divergence in secular terms, one can use the fact that they are invariant to time-reversal, so that:\begin{equation*}
+	\chi^{(n,-)}_{\zeta \eta \ldots \nu}(-\omega_\sigma; \omega_1, \omega_2, \ldots)  = \chi^{(n,-)}_{\zeta \eta \ldots \nu}(+\omega_\sigma; -\omega_1, -\omega_2,\ldots),
+\end{equation*}
+as it is the case for any NLO tensor element. The idea is thus to write $\chi^{(n,-)}$ as an average of itself and its time-reversal version. Doing so for $\left. \chi^{(n,+)} \right|_{\ket{a_j} = \ket{0}}$ (thus $\omega_{a_j} = 0$) and focusing on the denominator (the numerator is not affected, as the dipole operator is also invariant to time reversal) gives:\begin{align*}
+ 	\frac{1}{2x}\left[
+	 \frac{1}{\prod_{0 < i\neq j \leq n} (\omega_{a_i}'+x) } - \frac{1}{{\prod_{0 < i\neq j \leq n} \omega_{a_i}'}}
+	\right] = -\frac{1}{2x}\left[
+	\frac{\prod_{0 < i\neq j \leq n} (\omega_{a_i}'+x) - \prod_{0 < i\neq j \leq n} \omega_{a_i}}{\prod_{0 < i\neq j \leq n} (\omega_{a_i}'+x)\,\omega_{a_i}'}
+	\right],
+\end{align*}
+after defining $\omega_{a_j}'=-x$ for bookkeeping, and thanks to the permutation of a few indices to obtain $\omega_{a_i}'-x$ in the denominator of the time-reversal version. 
+
+
+\appendix
+\section{Proofs}
+
+\paragraph{Simplification leading to Eq.~x.} Given a set of reals $k_i$ so that $\{k_i|0<i\leq n\}$, \begin{equation}
+	\prod_{0<i\leq n} (k_i+x) =  \prod_{0<i\leq n}( k_i)+ x\,\left[\sum_{0< i\leq n} \left(\prod_{0<j< i}(k_j+x)\prod_{i<j\leq n}  (k_j)\right)\right].\label{eq:p1}
+\end{equation}
+Proof: in preamble, let us remind that for any $0<i\leq n$, one has:\begin{align}
+	\prod_{i<j\leq n} (k_j+x)&= (k_{i+1}+x)\,\prod_{i+1<j\leq n} (k_j+x)\nonumber\\
+	&= k_{i+1}\,\left[\prod_{i+1<j\leq n} (k_j+x) \right] + x\,\left[\prod_{i+1<j\leq n} (k_j+x) \right].\label{eq:p1:ind}
+\end{align}
+Now, let's prove Eq.~\eqref{eq:p1}. The $n=0$ and $n=1$ cases are trivial. For $n=2$, using Eq.~\eqref{eq:p1:ind} two times then rearranging:\begin{align*}
+	f(x) &= (k_1+x) \,(k_2+x)\\
+	&= k_2\,(k_1+x)+ x\,(k_1+x)\\
+	&= k_1k_2+x\,k_2+ x\,(k_1+x) = k_1k_2+x\,[(k_1+x)+ k_2],
+\end{align*}
+which fulfill Eq.~\eqref{eq:p1}.
+For $n=3$, using Eq.~\eqref{eq:p1:ind} three times then rearranging:\begin{align*}
+	f(x) &= (k_1+x) \,(k_2+x)\,(k_3+x)\\
+	&= k_3\,(k_1+x) \,(k_2+x)+x\,(k_1+x)\,(k_2+x)\\
+	&= k_2\,k_3\,(k_1+x)+x\,k_3\,(k_1+x)+x\,(k_1+x)\,(k_2+x)\\
+	&= k_1k_2k_3+x\,k_2\,k_3+x\,k_3\,(k_1+x)+x\,(k_1+x)\,(k_2+x)\\
+	&= k_1k_2k_3+x\,[(k_1+x)\,(k_2+x)+(k_1+x)\,k_3+k_2\,k_3]
+	\end{align*}
+which also fulfill Eq.~\eqref{eq:p1}. Finally, given the case $n=N$, let's prove for $n=N+1$:
+\begin{align*}
+	\prod_{0<i\leq N+1} (k_i+x) &= (k_{N+1}+x)\, \prod_{0<i\leq N} (k_i+x) \\
+	&= k_{N+1}\, \prod_{0<i\leq N} (k_i+x)  + x\,\prod_{0<i\leq N} (k_i+x)\\
+	&= k_{N+1}\,\left\{   \prod_{0<i\leq N}( k_i)+ x\,\left[\sum_{0< i\leq N} \left(\prod_{0<j< i}(k_j+x)\prod_{i<j\leq N}  (k_j)\right)\right]\right\} + x\,\prod_{0<i\leq N} (k_i+x)\\
+	&= \prod_{0<i\leq N+1}( k_i)+ x\,k_{N+1}\,\left[\sum_{0< i\leq N} \left(\prod_{0<j< i}(k_j+x)\prod_{i<j\leq N}  (k_j)\right)\right] + x\,\prod_{0<i\leq N} (k_i+x)\\
+	&= \prod_{0<i\leq N+1}( k_i)+ x\,\left[\sum_{0< i\leq N} \left(\prod_{0<j< i}(k_j+x)\prod_{i<j\leq N+1}  (k_j)\right)\right] + x\,\prod_{0<i< N+1} (k_i+x)\\
+	&= \prod_{0<i\leq N+1}( k_i)+ x\,\left[\sum_{0< i\leq N+1} \left(\prod_{0<j< i}(k_j+x)\prod_{i<j\leq N+1}  (k_j)\right)\right].
+\end{align*}
+The three last lines have been obtained by carefully rewriting the boundaries of the sums and products.
+Thus, by induction, Eq.~\eqref{eq:p1} is valid for any $n\geq0$.
 	
 \bibliographystyle{unsrt}
 \bibliography{biblio}
