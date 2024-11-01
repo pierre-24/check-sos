@@ -29,6 +29,7 @@ classifiers = [
 
 dependencies = [
     "numpy",
+    "more-itertools"
 ]
 
 [project.optional-dependencies]
