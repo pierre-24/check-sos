@@ -1,3 +1,6 @@
 numpy
 more-itertools
 pytest
+flake8
+flake8-quotes
+autopep8
