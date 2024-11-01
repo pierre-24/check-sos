@@ -86,6 +86,7 @@ class ComponentsIterator:
 class SOSMethod(enum.Enum):
     GENERAL = enum.auto
     FLUCTUATION_DIVERGENT = enum.auto
+    FLUCTUATION_NONDIVERGENT = enum.auto
 
 
 class System:
@@ -111,7 +112,8 @@ class System:
 
         compute_component = {
             SOSMethod.GENERAL: self.response_tensor_element_g,
-            SOSMethod.FLUCTUATION_DIVERGENT: self.response_tensor_element_f
+            SOSMethod.FLUCTUATION_DIVERGENT: self.response_tensor_element_f,
+            SOSMethod.FLUCTUATION_NONDIVERGENT: lambda c_, e_: self.response_tensor_element_f(c_, e_, False)
         }[method]
 
         it = ComponentsIterator(input_fields)
@@ -156,10 +158,10 @@ class System:
     def response_tensor_element_f(self, component: tuple, e_fields: List[float], use_divergent: bool = True) -> float:
         """
         Compute the value of a component of a response tensor, using fluctuation dipoles.
-        It corresponds to Eq. (8) of the text.
+        It corresponds to Eq. (6) of the text.
 
         Note: it breaks for n > 6, since `(ab)_a1(cd)_a3(efg)_a5a6` appears and that I did not yet implement a
-        general scheme.
+        general scheme. The n=5 case is handled using an ad-hoc correction ;)
         """
 
         assert len(component) == len(e_fields)
@@ -193,8 +195,11 @@ class System:
             for set_g in range(1, len(component) - 2):
                 if use_divergent:
                     value += self._secular_term_divergent(component, e_fields, (set_g, ))
+                else:
+                    value += self._secular_term_non_divergent(component, e_fields, set_g)
 
-        if len(component) == 6:
+        # ad hoc correction for n=5
+        if len(component) == 6 and use_divergent:
             value += self._secular_term_divergent(component, e_fields, (1, 3))
 
         return value * num_perm
@@ -202,7 +207,7 @@ class System:
     def _secular_term_divergent(self, component: tuple, e_fields: List[float], set_ground: tuple) -> float:
         """Compute the additional secular term that happen when n > 2, but using a divergent definition.
 
-        Implements parts of the Eq. (10) of the text, by setting the term a_i for all i in `set_ground`
+        Implements parts of the Eq. (8) of the text, by setting in Eq. (7) the term a_i for all i in `set_ground`
         to the ground state.
         """
 
@@ -234,3 +239,55 @@ class System:
                 value += numpy.prod(dips) / numpy.prod(ens)
 
         return value
+
+    def _secular_term_non_divergent(self, component: tuple, e_fields: List[float], set_ground: int) -> float:
+        """Implement Eq. (9) to provide a non-divergent secular term.
+        """
+
+        value = .0
+
+        to_permute = list(zip(component, e_fields))
+
+        for p in more_itertools.unique_everseen(itertools.permutations(to_permute)):
+            x = -sum(p[j][1] for j in range(set_ground + 1))
+
+            for states in itertools.product(range(1, len(self)), repeat=len(component) - 2):
+                states = list(states)
+
+                states.insert(set_ground, 0)
+
+                stx = list(states)
+                stx.append(0)
+                stx.insert(0, 0)
+
+                # numerator of Eq. (9)
+                dips = [
+                    self.t_dips[stx[i], stx[i + 1], p[i][0]] - (
+                        0 if stx[i] != stx[i + 1]
+                        else self.t_dips[0, 0, p[i][0]]
+                    ) for i in range(len(component))
+                ]
+
+                # denominator of Eq. (9)
+                # TODO: there is probably a way to write a nicer code here, without all those `continue`.
+                for i in range(len(component) - 1):
+                    if i == set_ground:
+                        continue
+
+                    ens = []
+
+                    for l_ in range(i + 1):
+                        if l_ == set_ground:
+                            continue
+
+                        ens.append(self.e_exci[states[l_]] + sum(p[j][1] for j in range(l_ + 1)))
+
+                    for l_ in range(i, len(component) - 1):
+                        if l_ == set_ground:
+                            continue
+
+                        ens.append(self.e_exci[states[l_]] + sum(p[j][1] for j in range(l_ + 1)) + x)
+
+                    value += numpy.prod(dips) / numpy.prod(ens)
+
+        return -.5 * value

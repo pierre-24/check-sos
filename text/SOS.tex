@@ -17,6 +17,8 @@
 \allowdisplaybreaks
 \onehalfspacing
 
+\section{Introduction}
+
 On the ground of perturbation theory, 
 the SOS expression of Orr and Ward \cite{orrPerturbationTheoryNonlinear1971} (see also Bishop \cite{bishopExplicitNondivergentFormulas1994}) states that any component of any nonlinear optical tensor $\chi^{(n)}(-\omega_\sigma;\omega_1,\ldots)$ (of order $n$)\footnote{I'm aware that $\chi$ is generaly used to refer to the nonlinear susceptibility, the macroscopic equivalent of what I'm discussing here, but I needed a greek letter.} is given by:\begin{align}
 &\chi^{(n)}_{\zeta\eta\ldots\nu}(-\omega_\sigma;\omega_1,\ldots) = \hbar^{-n}\sum_\mathcal{P}\sum_{a_1,a_2\ldots\,a_{n}} \frac{\mu^\zeta_{0a_1}{\mu}^\eta_{a_1a_2}\ldots \mu^\nu_{a_{n\,0}}}{\prod_{0<i\leq n} (\omega_{a_i}-\omega_\sigma+\sum_{0<j<i} \omega_j)},\label{eq:1:sos}
@@ -40,16 +42,17 @@ representing the polarizability $\alpha = \chi^{(1)}$, first hyperpolarizability
 Each of Eqs.~\eqref{eq:sos:alpha}-\eqref{eq:sos:gamma} encounters divergences (or singularities) when a denominator vanishes. This phenomenon is termed \textbf{secular divergence} if caused by any state $\ket{a_i} = \ket{0}$ (and thus $\omega_{a_i} = 0$) or, if any optical frequency (or a combination thereof) matches $\omega_{a_i} \neq 0$, is generally termed \textbf{resonance} \cite{bishopExplicitNondivergentFormulas1994}. While resonances are intrinsic to perturbation theory and often mitigated by introducing damping factors (though methods remain debated \cite{campoPracticalModelFirst2012a}), secular divergences are mathematical artifacts and can be avoided. 
 
 Following Bishops, substituting the dipole operator in Eq.~\eqref{eq:1:sos} with a fluctuation dipole operator, $\bar{\mu}^\zeta_{a_1 a_2} = \mu^\zeta_{a_1 a_2} - \delta_{a_1 a_2}\, \mu_{00}^\zeta$, results in $(\bar{\zeta})_g = 0$, allowing the ground state to be excluded from the summations in Eqs.~\eqref{eq:sos:alpha} and \eqref{eq:sos:beta}. Consequently, we obtain:
-\begin{align}
-	\alpha_{ij}(-\omega; \omega) &= \hbar^{-1} \sum_\mathcal{P} \sum_{a_1'} \frac{(\zeta\eta)_{a_1}}{\omega_{a_1} - \omega},\label{eq:fluct:alpha}\\
-	\beta_{ijk}(-\omega_\sigma; \omega_1, \omega_2) &= \hbar^{-2} \sum_\mathcal{P} \sum_{a_1', a_2'} \frac{(\zeta\bar{\eta}\kappa)_{a_1 a_2}}{(\omega_{a_1} - \omega_\sigma)(\omega_{a_2} - \omega_\sigma + \omega_1)},\label{eq:fluct:beta}
-\end{align}
+\begin{align*}
+	\alpha_{ij}(-\omega; \omega) &= \hbar^{-1} \sum_\mathcal{P} \sum_{a_1'} \frac{(\zeta\eta)_{a_1}}{\omega_{a_1} - \omega},\\
+	\beta_{ijk}(-\omega_\sigma; \omega_1, \omega_2) &= \hbar^{-2} \sum_\mathcal{P} \sum_{a_1', a_2'} \frac{(\zeta\bar{\eta}\kappa)_{a_1 a_2}}{(\omega_{a_1} - \omega_\sigma)(\omega_{a_2} - \omega_\sigma + \omega_1)},
+\end{align*}
 where the prime indicates that the sums over $a_1$ (and $a_2$) now exclude $\ket{0}$. This adjustment removes secular divergence, but also permits the first and last transition dipoles in each term to omit the ``bar'' as well.
 
 Applying this procedure to Eq.~\eqref{eq:sos:gamma} introduces an error in cases where terms with $\ket{a_2} = \ket{0}$ are omitted. The correct expression for the second hyperpolarizability, $\gamma$, is therefore the sum of two components, $\gamma = \gamma^{(+)} + \gamma^{(-)}$, where:
 \begin{align}
 	\gamma_{ijkl}^{(+)}(-\omega_\sigma; \omega_1, \omega_2, \omega_3) &= \hbar^{-3} \sum_\mathcal{P} \sum_{a_1', a_2', a_3'} \frac{(\zeta \bar{\eta} \bar{\kappa} \lambda)_{a_1 a_2 a_3}}{(\omega_{a_1} - \omega_\sigma)(\omega_{a_2} - \omega_\sigma + \omega_1)(\omega_{a_3} - \omega_\sigma + \omega_1 + \omega_2)}, \nonumber\\
 	\gamma_{ijkl}^{(-)}(-\omega_\sigma; \omega_1, \omega_2, \omega_3) &= \hbar^{-3} \sum_\mathcal{P} \sum_{a_1', a_3'} \frac{(\zeta \eta)_{a_1} (\kappa \lambda)_{a_3}}{(\omega_{a_1} - \omega_\sigma)(-\omega_\sigma + \omega_1)(\omega_{a_3} - \omega_\sigma + \omega_1 + \omega_2)},
+	\label{eq:fluct:gamma}
 \end{align}
 where $\gamma^{(+)}$ corresponds to the expression when summing over all non-ground states, while $\gamma^{(-)}$ is a correction term, obtained by setting $\ket{a_2} = \ket{0}$ in the expression of $\gamma^{(+)}$. However, these (so-called) secular terms, grouped in $\gamma^{(-)}$, lead to divergence if the conditions $-\omega_\sigma + \omega_1 = \omega_2 + \omega_3 = 0$ is satisfied, even though the ground state is excluded from the summation.
 
@@ -66,57 +69,84 @@ The secular contributions, $\chi^{(n,-)}$, are given by:
 \end{align}
 where Cartesian indices and laser frequencies have been omitted for clarity. The notation $\ket{a_i} = \ket{a_j} = \ket{0}$ specifies that both states $\ket{a_i}$ and $\ket{a_j}$ are evaluated as the ground state in Eq.~\eqref{eq:fluct:nonsecular}. The number of secular terms increases with $n$, as higher-order interactions introduce additional configurations in which intermediate states are the ground state. 
 
-After theses formula have been implemented, comparisons between Eq.~\eqref{eq:1:sos} and Eq.~\eqref{eq:fluct} have been successfully conducted to get tensors, $\chi^{(n)}$ corresponding to $n$\textsuperscript{th}-harmonic generation process (where all $\omega_i = \omega$), up to $n = 6$ (which includes a secular term where $\ket{a_2} = \ket{a_4} = \ket{0}$), within both two- and three-state models.
+\subsection{Curing the remaining divergent secular terms}
 
-\subsection{Non-divergent secular terms}
-
-According to Bishop \cite{bishopExplicitNondivergentFormulas1994}, to avoid divergence in secular terms, one can use the fact that they are invariant to time-reversal, so that:\begin{equation*}
-	\chi^{(n,-)}_{\zeta \eta \ldots \nu}(-\omega_\sigma; \omega_1, \omega_2, \ldots)  = \chi^{(n,-)}_{\zeta \eta \ldots \nu}(+\omega_\sigma; -\omega_1, -\omega_2,\ldots),
+To avoid divergence in secular terms, Bishop \cite{bishopExplicitNondivergentFormulas1994} suggests using the fact that these terms are invariant under time-reversal, so that:
+\begin{equation*}
+	\chi^{(n,-)}_{\zeta \eta \ldots \nu}(-\omega_\sigma; \omega_1, \omega_2, \ldots) = \chi^{(n,-)}_{\zeta \eta \ldots \nu}(+\omega_\sigma; -\omega_1, -\omega_2, \ldots),
 \end{equation*}
-as it is the case for any NLO tensor element. The idea is thus to write $\chi^{(n,-)}$ as an average of itself and its time-reversal version. Doing so for $\left. \chi^{(n,+)} \right|_{\ket{a_j} = \ket{0}}$ (thus $\omega_{a_j} = 0$) and focusing on the denominator (the numerator is not affected, as the dipole operator is also invariant to time reversal) gives:\begin{align*}
- 	\frac{1}{2x}\left[
-	 \frac{1}{\prod_{0 < i\neq j \leq n} (\omega_{a_i}'+x) } - \frac{1}{{\prod_{0 < i\neq j \leq n} \omega_{a_i}'}}
-	\right] = -\frac{1}{2x}\left[
-	\frac{\prod_{0 < i\neq j \leq n} (\omega_{a_i}'+x) - \prod_{0 < i\neq j \leq n} \omega_{a_i}}{\prod_{0 < i\neq j \leq n} (\omega_{a_i}'+x)\,\omega_{a_i}'}
-	\right],
-\end{align*}
-after defining $\omega_{a_j}'=-x$ for bookkeeping, and thanks to the permutation of a few indices to obtain $\omega_{a_i}'-x$ in the denominator of the time-reversal version. 
-
-
-\appendix
-\section{Proofs}
-
-\paragraph{Simplification leading to Eq.~x.} Given a set of reals $k_i$ so that $\{k_i|0<i\leq n\}$, \begin{equation}
-	\prod_{0<i\leq n} (k_i+x) =  \prod_{0<i\leq n}( k_i)+ x\,\left[\sum_{0< i\leq n} \left(\prod_{0<j< i}(k_j+x)\prod_{i<j\leq n}  (k_j)\right)\right].\label{eq:p1}
-\end{equation}
-Proof: in preamble, let us remind that for any $0<i\leq n$, one has:\begin{align}
-	\prod_{i<j\leq n} (k_j+x)&= (k_{i+1}+x)\,\prod_{i+1<j\leq n} (k_j+x)\nonumber\\
-	&= k_{i+1}\,\left[\prod_{i+1<j\leq n} (k_j+x) \right] + x\,\left[\prod_{i+1<j\leq n} (k_j+x) \right].\label{eq:p1:ind}
-\end{align}
-Now, let's prove Eq.~\eqref{eq:p1}. The $n=0$ and $n=1$ cases are trivial. For $n=2$, using Eq.~\eqref{eq:p1:ind} two times then rearranging:\begin{align*}
-	f(x) &= (k_1+x) \,(k_2+x)\\
-	&= k_2\,(k_1+x)+ x\,(k_1+x)\\
-	&= k_1k_2+x\,k_2+ x\,(k_1+x) = k_1k_2+x\,[(k_1+x)+ k_2],
-\end{align*}
-which fulfill Eq.~\eqref{eq:p1}.
-For $n=3$, using Eq.~\eqref{eq:p1:ind} three times then rearranging:\begin{align*}
-	f(x) &= (k_1+x) \,(k_2+x)\,(k_3+x)\\
-	&= k_3\,(k_1+x) \,(k_2+x)+x\,(k_1+x)\,(k_2+x)\\
-	&= k_2\,k_3\,(k_1+x)+x\,k_3\,(k_1+x)+x\,(k_1+x)\,(k_2+x)\\
-	&= k_1k_2k_3+x\,k_2\,k_3+x\,k_3\,(k_1+x)+x\,(k_1+x)\,(k_2+x)\\
-	&= k_1k_2k_3+x\,[(k_1+x)\,(k_2+x)+(k_1+x)\,k_3+k_2\,k_3]
-	\end{align*}
-which also fulfill Eq.~\eqref{eq:p1}. Finally, given the case $n=N$, let's prove for $n=N+1$:
+a property characteristic of any nonlinear optical (NLO) tensor element. The approach, then, is to rewrite $\chi^{(n,-)}$ as the average of itself and its time-reversed counterpart. Applying this procedure to $\left. \chi^{(n,+)} \right|_{\ket{a_j} = \ket{0}}$ (where $\omega_{a_j} = 0$) and focusing on the denominator (the numerator remains unaffected due to the time-reversal invariance of the dipole operator) yields:
 \begin{align*}
-	\prod_{0<i\leq N+1} (k_i+x) &= (k_{N+1}+x)\, \prod_{0<i\leq N} (k_i+x) \\
-	&= k_{N+1}\, \prod_{0<i\leq N} (k_i+x)  + x\,\prod_{0<i\leq N} (k_i+x)\\
-	&= k_{N+1}\,\left\{   \prod_{0<i\leq N}( k_i)+ x\,\left[\sum_{0< i\leq N} \left(\prod_{0<j< i}(k_j+x)\prod_{i<j\leq N}  (k_j)\right)\right]\right\} + x\,\prod_{0<i\leq N} (k_i+x)\\
-	&= \prod_{0<i\leq N+1}( k_i)+ x\,k_{N+1}\,\left[\sum_{0< i\leq N} \left(\prod_{0<j< i}(k_j+x)\prod_{i<j\leq N}  (k_j)\right)\right] + x\,\prod_{0<i\leq N} (k_i+x)\\
-	&= \prod_{0<i\leq N+1}( k_i)+ x\,\left[\sum_{0< i\leq N} \left(\prod_{0<j< i}(k_j+x)\prod_{i<j\leq N+1}  (k_j)\right)\right] + x\,\prod_{0<i< N+1} (k_i+x)\\
-	&= \prod_{0<i\leq N+1}( k_i)+ x\,\left[\sum_{0< i\leq N+1} \left(\prod_{0<j< i}(k_j+x)\prod_{i<j\leq N+1}  (k_j)\right)\right].
+	\frac{1}{2x} \left[ \frac{1}{\prod_{0 < i \neq j \leq n} (\omega_{a_i}' + x)} - \frac{1}{\prod_{0 < i \neq j \leq n} \omega_{a_i}'} \right] 
+	&= -\frac{1}{2x} \left[ \frac{\prod_{0 < i \neq j \leq n} (\omega_{a_i}' + x) - \prod_{0 < i \neq j \leq n} \omega_{a_i}'}{\prod_{0 < i \neq j \leq n} (\omega_{a_i}' + x) \, \omega_{a_i}'} \right],
 \end{align*}
-The three last lines have been obtained by carefully rewriting the boundaries of the sums and products.
-Thus, by induction, Eq.~\eqref{eq:p1} is valid for any $n\geq0$.
+after setting $\omega_{a_j}' = -x$ for convenience and using a permutation of indices to obtain $\omega_{a_i}' - x$ in the denominator of the time-reversed term. Applying Theorem~\ref{th:1} to the expression above gives:
+\begin{align*}
+	-\frac{1}{2} \left[ \frac{\sum_{0 < i \neq j \leq n} \left( \prod_{0 < l \neq j < i} (\omega'_{a_l} + x) \prod_{i < l \neq j \leq n} (\omega'_{a_l}) \right)}{\prod_{0 < l \neq j \leq n} (\omega_{a_l}' + x) \, \omega_{a_l}'} \right] 
+	&= -\frac{1}{2} \sum_{0 < i \neq j \leq n} \frac{1}{\prod_{0 < l \neq j \leq i} (\omega'_{a_l}) \prod_{i \leq l \neq j \leq n} (\omega'_{a_l} + x)}.
+\end{align*}
+Thus, we obtain:
+\begin{equation}
+	\left. \chi^{(n,+)} \right|_{\ket{a_j} = \ket{0}} = -\frac{1}{2\hbar^n} \sum_\mathcal{P} \sum_{a_1', a_2', \ldots} \sum_{0 < i \neq j \leq n} \frac{(\zeta \bar{\eta} \ldots \kappa)_{a_1 a_2 \ldots a_{j-1}} (\xi \bar{\tau} \ldots \nu)_{a_{j+1} \ldots a_n}}{\prod_{0 < l \neq j \leq i} (\omega'_{a_l}) \prod_{i \leq l \neq j \leq n} (\omega'_{a_l} + x)}, \label{eq:sec:nondiv}
+\end{equation}
+where $x = \omega_\sigma - \sum_{0 < l < j} \omega_l$. By further manipulating this equation, one can derive Eq.~\eqref{eq:fluct:gamma}. Additional explicit formulas are provided in Ref.~\cite{bishopExplicitNondivergentFormulas1994}. However, Eq.~\eqref{eq:sec:nondiv} is general enough to be implemented in a Python code.
+
+With Eq.~\eqref{eq:sec:nondiv}  alone, one is limited to $n<5$, since $n=5$ and above requires to include configuration where two intermediate states are ground. While it is most definitely possible to derive an expression for such case, it is out of the scope for the moment.
+
+\section{Results}
+
+After theses formula have been implemented, comparisons between Eq.~\eqref{eq:1:sos} and Eq.~\eqref{eq:fluct} have been successfully conducted to get tensors, $\chi^{(n)}$ corresponding to $n$\textsuperscript{th}-harmonic generation process (where all $\omega_i = \omega$), within both two- and three-state models.
+It was performed up to  $n = 5$ with divergent secular terms (which includes a secular term where $\ket{a_2} = \ket{a_4} = \ket{0}$).
+
+
+\clearpage
+\appendix
+\section{A few proofs}
+\setcounter{equation}{0} 
+\renewcommand{\theequation}{A\arabic{equation}}
+
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+
+\begin{lemma}\label{lem:1}
+	Given a set of reals $k_i$ so that $\{k_i|0<i\leq n\}$,  for any $0<i\leq n$, one has:\begin{align}
+		\prod_{0<j\leq i} (k_j+x)= k_{i}\,\left[\prod_{0<j<i} (k_j+x) \right] + x\,\left[\prod_{0<j<i} (k_j+x) \right].\label{eq:p1:ind}
+	\end{align}
+\end{lemma}
+\begin{proof}
+	Trivial.
+\end{proof}
+
+\begin{theorem}\label{th:1}
+	Given a set of reals $k_i$ so that $\{k_i|0<i\leq n\}$, \begin{equation}
+		\prod_{0<i\leq n} (k_i+x) =  \prod_{0<i\leq n}( k_i)+ x\,\left[\sum_{0< i\leq n} \left(\prod_{0<j< i}(k_j+x)\prod_{i<j\leq n}  (k_j)\right)\right].\label{eq:p1}
+	\end{equation}
+\end{theorem}
+\begin{proof}
+	The $n=0$ and $n=1$ cases are trivial. For $n=2$, using Lemma \ref{lem:1} two times then rearranging:\begin{align*}
+		f(x) &= (k_1+x) \,(k_2+x)\\
+		&= k_2\,(k_1+x)+ x\,(k_1+x)\\
+		&= k_1k_2+x\,k_2+ x\,(k_1+x) = k_1k_2+x\,[(k_1+x)+ k_2],
+	\end{align*}
+	fulfills theorem \ref{th:1}.
+	For $n=3$, using Lemma \ref{lem:1}, then the result for $n=2$ gives:\begin{align*}
+		f(x) &= (k_1+x) \,(k_2+x)\,(k_3+x) \\
+		&= k_3\,(k_1+x) \,(k_2+x)+x\,(k_1+x)(k_2+x) \\
+		&= k_3\,\{k_1k_2+x\,[(k_1+x)+ k_2]\}+x\,(k_1+x)(k_2+x) \\
+		&= k_1k_2k_3+x\,[(k_1+x)(k_2+x)+ (k_1+x)\,k_3+ k_2k_3]
+	\end{align*}
+	which also fulfill  theorem \ref{th:1}. Finally, given the case $n=N$, let's prove for $n=N+1$:
+	\begin{align*}
+		\prod_{0<i\leq N+1} (k_i+x) &= k_{N+1}\, \prod_{0<i\leq N} (k_i+x)  + x\,\prod_{0<i\leq N} (k_i+x)\\
+		&= k_{N+1}\,\left\{   \prod_{0<i\leq N}( k_i)+ x\,\left[\sum_{0< i\leq N} \left(\prod_{0<j< i}(k_j+x)\prod_{i<j\leq N}  (k_j)\right)\right]\right\} + x\,\prod_{0<i\leq N} (k_i+x)\\
+		&= \prod_{0<i\leq N+1}( k_i)+ x\,k_{N+1}\,\left[\sum_{0< i\leq N} \left(\prod_{0<j< i}(k_j+x)\prod_{i<j\leq N}  (k_j)\right)\right] + x\,\prod_{0<i\leq N} (k_i+x)\\
+		&= \prod_{0<i\leq N+1}( k_i)+ x\,\left[\sum_{0< i\leq N} \left(\prod_{0<j< i}(k_j+x)\prod_{i<j\leq N+1}  (k_j)\right)\right] + x\,\prod_{0<i< N+1} (k_i+x)\\
+		&= \prod_{0<i\leq N+1}( k_i)+ x\,\left[\sum_{0< i\leq N+1} \left(\prod_{0<j< i}(k_j+x)\prod_{i<j\leq N+1}  (k_j)\right)\right].
+	\end{align*}
+	The first line is the application of Lemma \ref{lem:1}, and the second uses Eq.~\eqref{eq:p1} for $n=N$. The three last lines have been obtained by carefully rewriting the boundaries of the sums and products, following the development for $n=3$.
+	Thus, by induction,  theorem \ref{th:1} is valid for any $n\geq0$.
+\end{proof}
+
 	
 \bibliographystyle{unsrt}
 \bibliography{biblio}
