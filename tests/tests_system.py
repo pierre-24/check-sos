@@ -1,7 +1,6 @@
-import pytest
 import numpy
 
-from sos.system import System
+from sos.system import System, SOSMethod
 
 t_dips_2s = numpy.array([
     [[1., 0, 0], [1.5, 0, 0]],  # 0→x
@@ -9,15 +8,15 @@ t_dips_2s = numpy.array([
 ])
 
 t_dips_3s = numpy.array([
-    [[1., 0, 0], [1.5, 0, 0], [.5, 0, 0]],  # 0→x
-    [[1.5, 0, 0], [2., 0, 0], [.25, 0, 0]],  # 1→x
-    [[.5, 0, 0], [.25, 0, 0], [1.5, 0, 0]]  # 2→x
+    [[1., .5, 0], [1.5, 0, 0], [.5, .5, 0]],  # 0→x
+    [[1.5, 0, 0], [2., 0, .5], [.25, 0, 0]],  # 1→x
+    [[.5, .5, 0], [.25, 0, 0], [1.5, 0, .5]]  # 2→x
 ])
 
 
 def test_divergent():
     """
-    Test the divergent cases (general formula vs fluctuation with divergent formula for secular terms),
+    Test the divergent cases (general formula vs fluctuation dipole with divergent formula for secular terms),
     so check against harmonic generation
     """
 
@@ -27,26 +26,23 @@ def test_divergent():
     w = .1
 
     for n in range(1, 6):
-        component = tuple(0 for _ in range(n + 1))
-        e_fields = [w for _ in range(n)]
-        e_fields.insert(0, -n * w)
+        fields = tuple(1 for _ in range(n))
+        print(fields)
 
-        print(e_fields)
-
-        assert (
-            system_2s.response_tensor_element_g(component, e_fields) ==
-            pytest.approx(system_2s.response_tensor_element_f(component, e_fields, use_divergent=True))
+        assert numpy.allclose(
+            system_2s.response_tensor(fields, w, method=SOSMethod.GENERAL),
+            system_2s.response_tensor(fields, w, method=SOSMethod.FLUCTUATION_DIVERGENT)
         )
 
-        assert (
-            system_3s.response_tensor_element_g(component, e_fields) ==
-            pytest.approx(system_3s.response_tensor_element_f(component, e_fields, use_divergent=True))
+        assert numpy.allclose(
+            system_3s.response_tensor(fields, w, method=SOSMethod.GENERAL),
+            system_3s.response_tensor(fields, w, method=SOSMethod.FLUCTUATION_DIVERGENT)
         )
 
 
 def test_non_divergent():
     """
-    Test the non-divergent case (general formula vs fluctuation with non-divergent formula for secular terms).
+    Test the non-divergent case (fluctuation dipole with divergent vs non-divergent formula for secular terms).
     """
 
     system_2s = System([.7, ], t_dips_2s)
@@ -55,18 +51,31 @@ def test_non_divergent():
     w = .1
 
     for n in range(1, 5):
-        component = tuple(0 for _ in range(n + 1))
-        e_fields = [w for _ in range(n)]
-        e_fields.insert(0, -n * w)
+        fields = tuple(1 for _ in range(n))
+        print(fields)
 
-        print(e_fields)
-
-        assert (
-            system_2s.response_tensor_element_g(component, e_fields) ==
-            pytest.approx(system_2s.response_tensor_element_f(component, e_fields, use_divergent=False))
+        assert numpy.allclose(
+            system_2s.response_tensor(fields, w, method=SOSMethod.FLUCTUATION_DIVERGENT),
+            system_2s.response_tensor(fields, w, method=SOSMethod.FLUCTUATION_NONDIVERGENT)
         )
 
-        assert (
-            system_3s.response_tensor_element_g(component, e_fields) ==
-            pytest.approx(system_3s.response_tensor_element_f(component, e_fields, use_divergent=False))
+        assert numpy.allclose(
+            system_3s.response_tensor(fields, w, method=SOSMethod.FLUCTUATION_DIVERGENT),
+            system_3s.response_tensor(fields, w, method=SOSMethod.FLUCTUATION_NONDIVERGENT)
         )
+
+
+def test_non_divergent_not_harmonic_generation():
+    """Check that non-divergent formula holds (i.e., nothing is imaginary) when the process involves a static field
+    """
+
+    system_3s = System([.7, .9], t_dips_3s)
+
+    w = .1
+
+    for i in range(4):
+        fields = tuple(1 if j < i else 0 for j in range(3))
+        print(fields)
+
+        t = system_3s.response_tensor(fields, w, method=SOSMethod.FLUCTUATION_NONDIVERGENT)
+        assert all(x != numpy.inf for x in t.flatten())
