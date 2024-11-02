@@ -1,4 +1,5 @@
 import numpy
+import io
 
 from sos.system import System, SOSMethod
 
@@ -12,6 +13,41 @@ t_dips_3s = numpy.array([
     [[1.5, 0, 0], [2., 0, .5], [.25, 0, 0]],  # 1→x
     [[.5, .5, 0], [.25, 0, 0], [1.5, 0, .5]]  # 2→x
 ])
+
+
+def test_read_system():
+
+    # 2-state
+    system_2s_def = """1
+    1 0.7
+    0 0 1.0 0.0 0.0
+    0 1 1.5 0.0 0.0
+    1 1 2.0 0.0 0.0"""
+
+    f = io.StringIO(system_2s_def)
+
+    system = System.from_file(f)
+
+    assert numpy.allclose(system.e_exci, [0, 0.7])
+    assert numpy.allclose(system.t_dips, t_dips_2s)
+
+    # 3-state
+    system_3s_def = """2
+    1 0.7
+    2 0.9
+    0 0 1. .5 0
+    0 1 1.5 0 0
+    0 2 .5 .5 0
+    1 1 2. 0 .5
+    1 2 .25 0 0
+    2 2 1.5 0 .5"""
+
+    f = io.StringIO(system_3s_def)
+
+    system = System.from_file(f)
+
+    assert numpy.allclose(system.e_exci, [0, 0.7, 0.9])
+    assert numpy.allclose(system.t_dips, t_dips_3s)
 
 
 def test_divergent():

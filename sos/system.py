@@ -5,8 +5,11 @@ import enum
 import more_itertools
 import numpy
 
-from typing import List, Iterable
+from typing import List, Iterable, Self, TextIO
 from numpy.typing import NDArray
+
+
+AU_TO_EV = 27.211386245981
 
 
 class ComponentsIterator:
@@ -105,10 +108,75 @@ class System:
     def __len__(self):
         return len(self.e_exci)
 
+    @classmethod
+    def from_file(cls, f: TextIO, energies_in_eV: bool = False, n: int = -1) -> Self:
+        """Read out a file.
+
+        :param f: an opened file
+        :param n: number of excitation energies
+        :param energies_in_eV: the energies are given in eV rather than atomic units
+        """
+
+        lines = f.readlines()
+
+        # if number of state is not provided, it is in the first line
+        if n < 0:
+            n = int(lines.pop(0).strip())
+
+        if n < 1:
+            raise Exception('Expect n > 0, got {}'.format(n))
+
+        # read excitations energies
+        e_exci = [.0] * n
+
+        if len(lines) < n:
+            raise Exception('Not enough lines in the files, at least {} excitations energies are required'.format(n))
+
+        for i, line in enumerate(lines[:n]):
+            chunks = line.split()
+            if len(chunks) != 2:
+                raise Exception('Incorrect number of value for excitation energies at line {}'.format(i + 1))
+            try:
+                iexci, eexci = int(chunks[0]), float(chunks[1])
+            except ValueError:
+                raise Exception('Invalid excitation energy at line {}'.format(i + 1))
+
+            if iexci > n or iexci < 1:
+                raise Exception('Incorrec energy att excitation {} at line {}'.format(iexci, i + 1))
+
+            if energies_in_eV:
+                eexci /= AU_TO_EV
+
+            e_exci[iexci - 1] = eexci
+
+        # read transition dipoles
+        t_dips = numpy.zeros((n + 1, n + 1, 3))
+
+        for i, line in enumerate(lines[n:]):
+            chunks = line.split()
+            if len(chunks) != 5:
+                raise Exception('Incorrect number of value for transition dipole at line {}'.format(n + i + 2))
+
+            iexci, jexci, x, y, z = int(chunks[0]), int(chunks[1]), float(chunks[2]), float(chunks[3]), float(chunks[4])
+
+            if iexci > n or iexci < 0 or jexci > n or jexci < 0:
+                raise Exception('Incorrect transition {}→{} at line {}'.format(iexci, jexci, n + i + 2))
+
+            t_dips[iexci, jexci] = t_dips[jexci, iexci] = [x, y, z]
+
+        return cls(e_exci, t_dips)
+
     def response_tensor(
-            self, input_fields: tuple = (1, 1), frequency: float = 0, method: SOSMethod = SOSMethod.GENERAL) -> NDArray:
+            self,
+            input_fields: tuple = (1, 1),
+            frequency: float = 0,
+            method: SOSMethod = SOSMethod.FLUCTUATION_NONDIVERGENT
+    ) -> NDArray:
         """Get a response tensor, a given SOS formula
         """
+
+        if len(input_fields) == 0:
+            raise Exception('input fields is empty?!?')
 
         compute_component = {
             SOSMethod.GENERAL: self.response_tensor_element_g,
