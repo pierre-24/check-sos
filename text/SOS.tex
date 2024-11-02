@@ -20,12 +20,12 @@
 \section{Introduction}
 
 On the ground of perturbation theory, 
-the SOS expression of Orr and Ward \cite{orrPerturbationTheoryNonlinear1971} (see also Bishop \cite{bishopExplicitNondivergentFormulas1994}) states that any component of any nonlinear optical tensor $\chi^{(n)}(-\omega_\sigma;\omega_1,\ldots)$ (of order $n$)\footnote{I'm aware that $\chi$ is generaly used to refer to the nonlinear susceptibility, the macroscopic equivalent of what I'm discussing here, but I needed a greek letter.} is given by:\begin{align}
-&\chi^{(n)}_{\zeta\eta\ldots\nu}(-\omega_\sigma;\omega_1,\ldots) = \hbar^{-n}\sum_\mathcal{P}\sum_{a_1,a_2\ldots\,a_{n}} \frac{\mu^\zeta_{0a_1}{\mu}^\eta_{a_1a_2}\ldots \mu^\nu_{a_{n\,0}}}{\prod_{0<i\leq n} (\omega_{a_i}-\omega_\sigma+\sum_{0<j<i} \omega_j)},\label{eq:1:sos}
+the SOS expression of Orr and Ward \cite{orrPerturbationTheoryNonlinear1971} (see also Bishop \cite{bishopExplicitNondivergentFormulas1994}) states that any component of any nonlinear optical tensor $X^{(n)}(-\omega_\sigma;\omega_1,\ldots)$ (of order $n$) is given by:\begin{align}
+&X^{(n)}_{\zeta\eta\ldots\nu}(-\omega_\sigma;\omega_1,\ldots) = \hbar^{-n}\sum_\mathcal{P}\sum_{a_1,a_2\ldots\,a_{n}} \frac{\mu^\zeta_{0a_1}{\mu}^\eta_{a_1a_2}\ldots \mu^\nu_{a_{n\,0}}}{\prod_{0<i\leq n} (\omega_{a_i}-\omega_\sigma+\sum_{0<j<i} \omega_j)},\label{eq:1:sos}
 \end{align}
 where $\zeta,\eta,\ldots$ are the Cartesian coordinates $x, y, z$ (in the molecular frame), $\omega_1, \omega_2\ldots$, the (optical) input frequencies of the laser for the NLO process (with $\omega_\sigma = \sum_{0<i<n} \omega_i$), $\ket{a_1}, \ket{a_2}, \ldots$, the states of the system  \textbf{including the ground state} (with $\hbar\omega_{a_i}$ the excitation energy from ground state, noted  $\ket{0}$, to $\ket{a_i}$), $\mu^\zeta_{a_ia_j} = \braket{a_i|\hat \zeta|a_j}$ the transition dipole moment from state $a_i$ to $a_j$ (it corresponds to the dipole moment of electronic state $a_i$ when $i=j$), and $\sum_\mathcal{P}$ the sum of the different permutations over each pair $(\zeta, \omega_\sigma),(\eta,\omega_1),\ldots$. 
 
-Given the form of Eq.~\eqref{eq:1:sos}, it is relatively easy to write a (Python) code that compute any $\chi^{(n)}$. However, doing so requires care, since this expression blow up when any $\omega_i = 0$. The goal of this document is to find alternative formulas, while retaining generality.
+Given the form of Eq.~\eqref{eq:1:sos}, it is relatively easy to write a (Python) code that compute any $X^{(n)}$. However, doing so requires care, since this expression blow up when any $\omega_i = 0$. The goal of this document is to find alternative formulas, while retaining generality.
 
 \section{Theory}
 
@@ -37,7 +37,7 @@ Examining the expressions for $n\in[1,3]$ more closely, one has:
 	\beta_{ijk}(-\omega_\sigma; \omega_1, \omega_2) &= \hbar^{-2} \sum_\mathcal{P} \sum_{a_1,a_2} \frac{(\zeta\eta\kappa)_{a_1 a_2}}{(\omega_{a_1} - \omega_\sigma)(\omega_{a_2} - \omega_\sigma + \omega_1)},\label{eq:sos:beta}\\
 	\gamma_{ijkl}(-\omega_\sigma; \omega_1, \omega_2, \omega_3) &= \hbar^{-3} \sum_\mathcal{P} \sum_{a_1, a_2, a_3} \frac{(\zeta\eta\kappa\lambda)_{a_1 a_2 a_3}}{(\omega_{a_1} - \omega_\sigma)(\omega_{a_2} - \omega_\sigma + \omega_1)(\omega_{a_3} - \omega_\sigma + \omega_1 + \omega_2)},\label{eq:sos:gamma}
 \end{align}
-representing the polarizability $\alpha = \chi^{(1)}$, first hyperpolarizability $\beta = \chi^{(2)}$, and second hyperpolarizability $\gamma = \chi^{(3)}$. Here, the numerator notation of Bishop \cite{bishopExplicitNondivergentFormulas1994}, $(\zeta\eta\kappa\lambda)_{a_1 a_2 a_3} = \mu_{0 a_1}^\zeta \mu_{a_1 a_2}^\eta \mu_{a_2 a_3}^\kappa \mu_{a_3 0}^\lambda$, is employed.
+representing the polarizability $\alpha = X^{(1)}$, first hyperpolarizability $\beta = X^{(2)}$, and second hyperpolarizability $\gamma = X^{(3)}$. Here, the numerator notation of Bishop \cite{bishopExplicitNondivergentFormulas1994}, $(\zeta\eta\kappa\lambda)_{a_1 a_2 a_3} = \mu_{0 a_1}^\zeta \mu_{a_1 a_2}^\eta \mu_{a_2 a_3}^\kappa \mu_{a_3 0}^\lambda$, is employed.
 
 Each of Eqs.~\eqref{eq:sos:alpha}-\eqref{eq:sos:gamma} encounters divergences (or singularities) when a denominator vanishes. This phenomenon is termed \textbf{secular divergence} if caused by any state $\ket{a_i} = \ket{0}$ (and thus $\omega_{a_i} = 0$) or, if any optical frequency (or a combination thereof) matches $\omega_{a_i} \neq 0$, is generally termed \textbf{resonance} \cite{bishopExplicitNondivergentFormulas1994}. While resonances are intrinsic to perturbation theory and often mitigated by introducing damping factors (though methods remain debated \cite{campoPracticalModelFirst2012a}), secular divergences are mathematical artifacts and can be avoided. 
 
@@ -57,15 +57,15 @@ Applying this procedure to Eq.~\eqref{eq:sos:gamma} introduces an error in cases
 where $\gamma^{(+)}$ corresponds to the expression when summing over all non-ground states, while $\gamma^{(-)}$ is a correction term, obtained by setting $\ket{a_2} = \ket{0}$ in the expression of $\gamma^{(+)}$. However, these (so-called) secular terms, grouped in $\gamma^{(-)}$, lead to divergence if the conditions $-\omega_\sigma + \omega_1 = \omega_2 + \omega_3 = 0$ is satisfied, even though the ground state is excluded from the summation.
 
 Before addressing this divergence in detail, note that a generalization of this procedure yields \begin{equation}
-	\chi^{(n)}_{\zeta \eta \ldots \nu}(-\omega_\sigma; \omega_1, \ldots)  = \chi^{(n,+)}_{\zeta \eta \ldots \nu}(-\omega_\sigma; \omega_1, \ldots)  + \chi^{(n,-)}_{\zeta \eta \ldots \nu}(-\omega_\sigma; \omega_1, \ldots) ,\label{eq:fluct}
-\end{equation} where $\chi^{(n,+)}$ represents the non-secular contributions, given by:
+	X^{(n)}_{\zeta \eta \ldots \nu}(-\omega_\sigma; \omega_1, \ldots)  = X^{(n,+)}_{\zeta \eta \ldots \nu}(-\omega_\sigma; \omega_1, \ldots)  + X^{(n,-)}_{\zeta \eta \ldots \nu}(-\omega_\sigma; \omega_1, \ldots) ,\label{eq:fluct}
+\end{equation} where $X^{(n,+)}$ represents the non-secular contributions, given by:
 \begin{align}
-	\chi^{(n,+)}_{\zeta \eta \ldots \nu}(-\omega_\sigma; \omega_1, \ldots) = \hbar^{-n} \sum_\mathcal{P} \sum_{a_1', a_2', \ldots} \frac{(\zeta \bar{\eta} \bar{\kappa} \ldots \nu)_{a_1 a_2 \ldots a_n}}{\prod_{0 < i \leq n} \omega_{a_i}'} ,\label{eq:fluct:nonsecular}
+	X^{(n,+)}_{\zeta \eta \ldots \nu}(-\omega_\sigma; \omega_1, \ldots) = \hbar^{-n} \sum_\mathcal{P} \sum_{a_1', a_2', \ldots} \frac{(\zeta \bar{\eta} \bar{\kappa} \ldots \nu)_{a_1 a_2 \ldots a_n}}{\prod_{0 < i \leq n} \omega_{a_i}'} ,\label{eq:fluct:nonsecular}
 \end{align}
 which follows directly from Eq.~\eqref{eq:1:sos}, with the summation now excluding the ground state. Here, the notation $\omega_{a_i}' = \omega_{a_i} - \omega_\sigma + \sum_{0 < j < i} \omega_j$ is introduced, which will be useful next.
-The secular contributions, $\chi^{(n,-)}$, are given by:
+The secular contributions, $X^{(n,-)}$, are given by:
 \begin{align}
-	\chi^{(n,-)} = \sum_{1 < i < n} \left[ \left. \chi^{(n,+)} \right|_{\ket{a_i} = \ket{0}} + \sum_{i+1 < j < n} \left( \left. \chi^{(n,+)} \right|_{\ket{a_i} = \ket{a_j} = \ket{0}} + \ldots \right) \right],\label{eq:fluct:secular}
+	X^{(n,-)} = \sum_{1 < i < n} \left[ \left. X^{(n,+)} \right|_{\ket{a_i} = \ket{0}} + \sum_{i+1 < j < n} \left( \left. X^{(n,+)} \right|_{\ket{a_i} = \ket{a_j} = \ket{0}} + \ldots \right) \right],\label{eq:fluct:secular}
 \end{align}
 where Cartesian indices and laser frequencies have been omitted for clarity. The notation $\ket{a_i} = \ket{a_j} = \ket{0}$ specifies that both states $\ket{a_i}$ and $\ket{a_j}$ are evaluated as the ground state in Eq.~\eqref{eq:fluct:nonsecular}. The number of secular terms increases with $n$, as higher-order interactions introduce additional configurations in which intermediate states are the ground state. 
 
@@ -73,9 +73,9 @@ where Cartesian indices and laser frequencies have been omitted for clarity. The
 
 To avoid divergence in secular terms, Bishop \cite{bishopExplicitNondivergentFormulas1994} suggests using the fact that these terms are invariant under time-reversal, so that:
 \begin{equation*}
-	\chi^{(n,-)}_{\zeta \eta \ldots \nu}(-\omega_\sigma; \omega_1, \omega_2, \ldots) = \chi^{(n,-)}_{\zeta \eta \ldots \nu}(+\omega_\sigma; -\omega_1, -\omega_2, \ldots),
+	X^{(n,-)}_{\zeta \eta \ldots \nu}(-\omega_\sigma; \omega_1, \omega_2, \ldots) = X^{(n,-)}_{\zeta \eta \ldots \nu}(+\omega_\sigma; -\omega_1, -\omega_2, \ldots),
 \end{equation*}
-a property characteristic of any nonlinear optical (NLO) tensor element. The approach, then, is to rewrite $\chi^{(n,-)}$ as the average of itself and its time-reversed counterpart. Applying this procedure to $\left. \chi^{(n,+)} \right|_{\ket{a_j} = \ket{0}}$ (where $\omega_{a_j} = 0$) and focusing on the denominator (the numerator remains unaffected due to the time-reversal invariance of the dipole operator) yields:
+a property characteristic of any nonlinear optical (NLO) tensor element. The approach, then, is to rewrite $X^{(n,-)}$ as the average of itself and its time-reversed counterpart. Applying this procedure to $\left. X^{(n,+)} \right|_{\ket{a_j} = \ket{0}}$ (where $\omega_{a_j} = 0$) and focusing on the denominator (the numerator remains unaffected due to the time-reversal invariance of the dipole operator) yields:
 \begin{align*}
 	\frac{1}{2x} \left[ \frac{1}{\prod_{0 < i \neq j \leq n} (\omega_{a_i}' + x)} - \frac{1}{\prod_{0 < i \neq j \leq n} \omega_{a_i}'} \right] 
 	&= -\frac{1}{2x} \left[ \frac{\prod_{0 < i \neq j \leq n} (\omega_{a_i}' + x) - \prod_{0 < i \neq j \leq n} \omega_{a_i}'}{\prod_{0 < i \neq j \leq n} (\omega_{a_i}' + x) \, \omega_{a_i}'} \right],
@@ -87,7 +87,7 @@ after setting $\omega_{a_j}' = -x$ for convenience and using a permutation of in
 \end{align*}
 Thus, we obtain:
 \begin{equation}
-	\left. \chi^{(n,+)} \right|_{\ket{a_j} = \ket{0}} = -\frac{1}{2\hbar^n} \sum_\mathcal{P} \sum_{a_1', a_2', \ldots} \sum_{0 < i \neq j \leq n} \frac{(\zeta \bar{\eta} \ldots \kappa)_{a_1 a_2 \ldots a_{j-1}} (\xi \bar{\tau} \ldots \nu)_{a_{j+1} \ldots a_n}}{\prod_{0 < l \neq j \leq i} (\omega'_{a_l}) \prod_{i \leq l \neq j \leq n} (\omega'_{a_l} + x)}, \label{eq:sec:nondiv}
+	\left. X^{(n,+)} \right|_{\ket{a_j} = \ket{0}} = -\frac{1}{2\hbar^n} \sum_\mathcal{P} \sum_{a_1', a_2', \ldots} \sum_{0 < i \neq j \leq n} \frac{(\zeta \bar{\eta} \ldots \kappa)_{a_1 a_2 \ldots a_{j-1}} (\xi \bar{\tau} \ldots \nu)_{a_{j+1} \ldots a_n}}{\prod_{0 < l \neq j \leq i} (\omega'_{a_l}) \prod_{i \leq l \neq j \leq n} (\omega'_{a_l} + x)}, \label{eq:sec:nondiv}
 \end{equation}
 where $x = \omega_\sigma - \sum_{0 < l < j} \omega_l$. By further manipulating this equation, one can derive Eq.~\eqref{eq:fluct:gamma}. Additional explicit formulas are provided in Ref.~\cite{bishopExplicitNondivergentFormulas1994}. However, Eq.~\eqref{eq:sec:nondiv} is general enough to be implemented in a Python code.
 
@@ -95,7 +95,7 @@ With Eq.~\eqref{eq:sec:nondiv}  alone, one is limited to $n<5$, since $n=5$ and 
 
 \section{Results}
 
-After theses formula have been implemented, comparisons between Eq.~\eqref{eq:1:sos} and Eq.~\eqref{eq:fluct} have been successfully conducted to get tensors, $\chi^{(n)}$ corresponding to $n$\textsuperscript{th}-harmonic generation process (where all $\omega_i = \omega$), within both two- and three-state models.
+After theses formula have been implemented, comparisons between Eq.~\eqref{eq:1:sos} and Eq.~\eqref{eq:fluct} have been successfully conducted to get tensors, $X^{(n)}$ corresponding to $n$\textsuperscript{th}-harmonic generation process (where all $\omega_i = \omega$), within both two- and three-state models.
 It was performed up to  $n = 5$ with divergent secular terms (which includes a secular term where $\ket{a_2} = \ket{a_4} = \ket{0}$), and up to $n=4$ with non-divergent secular terms [using Eq.~\eqref{eq:sec:nondiv}].
 
 Then, different tensors corresponding to NLO processes which include a static field where tested with $n=3$ (static, dc-kerr, and EFISHG) using Eq.~\eqref{eq:sec:nondiv} and a three-state model. No sign of divergence where found.

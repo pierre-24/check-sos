@@ -73,8 +73,7 @@ def test_non_divergent_not_harmonic_generation():
 
     w = .1
 
-    for i in range(4):
-        fields = tuple(1 if j < i else 0 for j in range(3))
+    for fields in [(0, 0, 0), (1, 0, 0), (1, 1, 0), (1, -1, 1)]:
         print(fields)
 
         t = system_3s.response_tensor(fields, w, method=SOSMethod.FLUCTUATION_NONDIVERGENT)
