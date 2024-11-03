@@ -9,7 +9,27 @@ from numpy.typing import NDArray
 
 tr_ = {0: 'x', 1: 'y', 2: 'z'}
 
-HC = 45.56335
+HC_IN_EV = 45.56335
+AU_TO_EV = 27.211386245981
+
+
+def get_preamble(fields, w) -> str:
+
+    def _fx(f) -> str:
+        if f == 0:
+            return '0'
+        elif f == 1:
+            return 'w'
+        elif f == -1:
+            return '-w'
+        else:
+            return '{}w'.format(f)
+
+    return 'X({};{}) @ w={}'.format(
+        _fx(-sum(fields)),
+        ','.join(_fx(f) for f in fields),
+        '{:.1f}nm'.format(HC_IN_EV / w) if w != .0 else '0'
+    )
 
 
 def print_tensor(tensor: NDArray):
@@ -44,13 +64,14 @@ def main():
 
     args = parser.parse_args()
 
-    print('X({}) @ w={}'.format(
-        ','.join('{}w'.format(f) for f in ([-sum(args.fields)] + list(args.fields))),
-        '{:.1f}nm'.format(HC / args.omega) if args.omega != .0 else '0'
-    ))
+    print(get_preamble(args.fields, args.omega))
 
     try:
-        system = System.from_file(args.source, args.eV, args.nstates)
+        system = System.from_file(args.source, args.nstates)
+
+        if args.eV:
+            system.e_exci /= AU_TO_EV
+
         print_tensor(system.response_tensor(input_fields=args.fields, frequency=args.omega))
     except Exception as e:
         print(e, file=sys.stderr)

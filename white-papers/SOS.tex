@@ -33,9 +33,9 @@ Given the form of Eq.~\eqref{eq:1:sos}, it is relatively easy to write a (Python
 
 Examining the expressions for $n\in[1,3]$ more closely, one has:
 \begin{align}
-	\alpha_{ij}(-\omega;\omega) &= \hbar^{-1} \sum_\mathcal{P} \sum_{a_1} \frac{(\zeta\eta)_{a_1}}{\omega_{a_1} - \omega},\label{eq:sos:alpha}\\
-	\beta_{ijk}(-\omega_\sigma; \omega_1, \omega_2) &= \hbar^{-2} \sum_\mathcal{P} \sum_{a_1,a_2} \frac{(\zeta\eta\kappa)_{a_1 a_2}}{(\omega_{a_1} - \omega_\sigma)(\omega_{a_2} - \omega_\sigma + \omega_1)},\label{eq:sos:beta}\\
-	\gamma_{ijkl}(-\omega_\sigma; \omega_1, \omega_2, \omega_3) &= \hbar^{-3} \sum_\mathcal{P} \sum_{a_1, a_2, a_3} \frac{(\zeta\eta\kappa\lambda)_{a_1 a_2 a_3}}{(\omega_{a_1} - \omega_\sigma)(\omega_{a_2} - \omega_\sigma + \omega_1)(\omega_{a_3} - \omega_\sigma + \omega_1 + \omega_2)},\label{eq:sos:gamma}
+	\alpha_{\zeta\eta}(-\omega;\omega) &= \hbar^{-1} \sum_\mathcal{P} \sum_{a_1} \frac{(\zeta\eta)_{a_1}}{\omega_{a_1} - \omega},\label{eq:sos:alpha}\\
+	\beta_{\zeta\eta\kappa}(-\omega_\sigma; \omega_1, \omega_2) &= \hbar^{-2} \sum_\mathcal{P} \sum_{a_1,a_2} \frac{(\zeta\eta\kappa)_{a_1 a_2}}{(\omega_{a_1} - \omega_\sigma)(\omega_{a_2} - \omega_\sigma + \omega_1)},\label{eq:sos:beta}\\
+	\gamma_{\zeta\eta\kappa\lambda}(-\omega_\sigma; \omega_1, \omega_2, \omega_3) &= \hbar^{-3} \sum_\mathcal{P} \sum_{a_1, a_2, a_3} \frac{(\zeta\eta\kappa\lambda)_{a_1 a_2 a_3}}{(\omega_{a_1} - \omega_\sigma)(\omega_{a_2} - \omega_\sigma + \omega_1)(\omega_{a_3} - \omega_\sigma + \omega_1 + \omega_2)},\label{eq:sos:gamma}
 \end{align}
 representing the polarizability $\alpha = X^{(1)}$, first hyperpolarizability $\beta = X^{(2)}$, and second hyperpolarizability $\gamma = X^{(3)}$. Here, the numerator notation of Bishop \cite{bishopExplicitNondivergentFormulas1994}, $(\zeta\eta\kappa\lambda)_{a_1 a_2 a_3} = \mu_{0 a_1}^\zeta \mu_{a_1 a_2}^\eta \mu_{a_2 a_3}^\kappa \mu_{a_3 0}^\lambda$, is employed.
 
@@ -43,15 +43,15 @@ Each of Eqs.~\eqref{eq:sos:alpha}-\eqref{eq:sos:gamma} encounters divergences (o
 
 Following Bishops, substituting the dipole operator in Eq.~\eqref{eq:1:sos} with a fluctuation dipole operator, $\bar{\mu}^\zeta_{a_1 a_2} = \mu^\zeta_{a_1 a_2} - \delta_{a_1 a_2}\, \mu_{00}^\zeta$, results in $(\bar{\zeta})_g = 0$, allowing the ground state to be excluded from the summations in Eqs.~\eqref{eq:sos:alpha} and \eqref{eq:sos:beta}. Consequently, we obtain:
 \begin{align*}
-	\alpha_{ij}(-\omega; \omega) &= \hbar^{-1} \sum_\mathcal{P} \sum_{a_1'} \frac{(\zeta\eta)_{a_1}}{\omega_{a_1} - \omega},\\
-	\beta_{ijk}(-\omega_\sigma; \omega_1, \omega_2) &= \hbar^{-2} \sum_\mathcal{P} \sum_{a_1', a_2'} \frac{(\zeta\bar{\eta}\kappa)_{a_1 a_2}}{(\omega_{a_1} - \omega_\sigma)(\omega_{a_2} - \omega_\sigma + \omega_1)},
+	\alpha_{\zeta\eta}(-\omega; \omega) &= \hbar^{-1} \sum_\mathcal{P} \sum_{a_1'} \frac{(\zeta\eta)_{a_1}}{\omega_{a_1} - \omega},\\
+	\beta_{\zeta\eta\kappa}(-\omega_\sigma; \omega_1, \omega_2) &= \hbar^{-2} \sum_\mathcal{P} \sum_{a_1', a_2'} \frac{(\zeta\bar{\eta}\kappa)_{a_1 a_2}}{(\omega_{a_1} - \omega_\sigma)(\omega_{a_2} - \omega_\sigma + \omega_1)},
 \end{align*}
 where the prime indicates that the sums over $a_1$ (and $a_2$) now exclude $\ket{0}$. This adjustment removes secular divergence, but also permits the first and last transition dipoles in each term to omit the ``bar'' as well.
 
 Applying this procedure to Eq.~\eqref{eq:sos:gamma} introduces an error in cases where terms with $\ket{a_2} = \ket{0}$ are omitted. The correct expression for the second hyperpolarizability, $\gamma$, is therefore the sum of two components, $\gamma = \gamma^{(+)} + \gamma^{(-)}$, where:
 \begin{align}
-	\gamma_{ijkl}^{(+)}(-\omega_\sigma; \omega_1, \omega_2, \omega_3) &= \hbar^{-3} \sum_\mathcal{P} \sum_{a_1', a_2', a_3'} \frac{(\zeta \bar{\eta} \bar{\kappa} \lambda)_{a_1 a_2 a_3}}{(\omega_{a_1} - \omega_\sigma)(\omega_{a_2} - \omega_\sigma + \omega_1)(\omega_{a_3} - \omega_\sigma + \omega_1 + \omega_2)}, \nonumber\\
-	\gamma_{ijkl}^{(-)}(-\omega_\sigma; \omega_1, \omega_2, \omega_3) &= \hbar^{-3} \sum_\mathcal{P} \sum_{a_1', a_3'} \frac{(\zeta \eta)_{a_1} (\kappa \lambda)_{a_3}}{(\omega_{a_1} - \omega_\sigma)(-\omega_\sigma + \omega_1)(\omega_{a_3} - \omega_\sigma + \omega_1 + \omega_2)},
+	\gamma_{\zeta\eta\kappa\lambda}^{(+)}(-\omega_\sigma; \omega_1, \omega_2, \omega_3) &= \hbar^{-3} \sum_\mathcal{P} \sum_{a_1', a_2', a_3'} \frac{(\zeta \bar{\eta} \bar{\kappa} \lambda)_{a_1 a_2 a_3}}{(\omega_{a_1} - \omega_\sigma)(\omega_{a_2} - \omega_\sigma + \omega_1)(\omega_{a_3} - \omega_\sigma + \omega_1 + \omega_2)}, \nonumber\\
+	\gamma_{\zeta\eta\kappa\lambda}^{(-)}(-\omega_\sigma; \omega_1, \omega_2, \omega_3) &= \hbar^{-3} \sum_\mathcal{P} \sum_{a_1', a_3'} \frac{(\zeta \eta)_{a_1} (\kappa \lambda)_{a_3}}{(\omega_{a_1} - \omega_\sigma)(-\omega_\sigma + \omega_1)(\omega_{a_3} - \omega_\sigma + \omega_1 + \omega_2)},
 	\label{eq:fluct:gamma}
 \end{align}
 where $\gamma^{(+)}$ corresponds to the expression when summing over all non-ground states, while $\gamma^{(-)}$ is a correction term, obtained by setting $\ket{a_2} = \ket{0}$ in the expression of $\gamma^{(+)}$. However, these (so-called) secular terms, grouped in $\gamma^{(-)}$, lead to divergence if the conditions $-\omega_\sigma + \omega_1 = \omega_2 + \omega_3 = 0$ is satisfied, even though the ground state is excluded from the summation.
@@ -98,7 +98,7 @@ With Eq.~\eqref{eq:sec:nondiv}  alone, one is limited to $n<5$, since $n=5$ and 
 After theses formula have been implemented, comparisons between Eq.~\eqref{eq:1:sos} and Eq.~\eqref{eq:fluct} have been successfully conducted to get tensors, $X^{(n)}$ corresponding to $n$\textsuperscript{th}-harmonic generation process (where all $\omega_i = \omega$), within both two- and three-state models.
 It was performed up to  $n = 5$ with divergent secular terms (which includes a secular term where $\ket{a_2} = \ket{a_4} = \ket{0}$), and up to $n=4$ with non-divergent secular terms [using Eq.~\eqref{eq:sec:nondiv}].
 
-Then, different tensors corresponding to NLO processes which include a static field where tested with $n=3$ (static, dc-kerr, and EFISHG) using Eq.~\eqref{eq:sec:nondiv} and a three-state model. No sign of divergence where found.
+Then, different tensors corresponding to NLO processes which include a static field where tested with $n=3$ (static, dc-kerr, DFWM, and EFISHG) using Eq.~\eqref{eq:sec:nondiv} and a three-state model. No sign of divergence where found.
 
 
 \clearpage

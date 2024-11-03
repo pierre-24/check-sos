@@ -9,9 +9,6 @@ from typing import List, Iterable, Self, TextIO
 from numpy.typing import NDArray
 
 
-AU_TO_EV = 27.211386245981
-
-
 class ComponentsIterator:
     """Iterate over (unique) components of a NLO tensor
     """
@@ -109,12 +106,11 @@ class System:
         return len(self.e_exci)
 
     @classmethod
-    def from_file(cls, f: TextIO, energies_in_eV: bool = False, n: int = -1) -> Self:
+    def from_file(cls, f: TextIO, n: int = -1) -> Self:
         """Read out a file.
 
         :param f: an opened file
         :param n: number of excitation energies
-        :param energies_in_eV: the energies are given in eV rather than atomic units
         """
 
         lines = f.readlines()
@@ -143,9 +139,6 @@ class System:
 
             if iexci > n or iexci < 1:
                 raise Exception('Incorrec energy att excitation {} at line {}'.format(iexci, i + 1))
-
-            if energies_in_eV:
-                eexci /= AU_TO_EV
 
             e_exci[iexci - 1] = eexci
 
