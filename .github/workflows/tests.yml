@@ -28,7 +28,7 @@ jobs:
         pip install -e .[dev]
     - name: Lint
       run: |
-        flake8 sos tests
+        flake8 sos few_state tests
     - name: Tests
       run: |
         pytest tests

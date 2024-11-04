@@ -138,7 +138,7 @@ class System:
                 raise Exception('Invalid excitation energy at line {}'.format(i + 1))
 
             if iexci > n or iexci < 1:
-                raise Exception('Incorrec energy att excitation {} at line {}'.format(iexci, i + 1))
+                raise Exception('Incorrect energy att excitation {} at line {}'.format(iexci, i + 1))
 
             e_exci[iexci - 1] = eexci
 
@@ -158,6 +158,15 @@ class System:
             t_dips[iexci, jexci] = t_dips[jexci, iexci] = [x, y, z]
 
         return cls(e_exci, t_dips)
+
+    def to_file(self, f: TextIO):
+        f.write('{}\n'.format(len(self) - 1))
+        for i, e in enumerate(self.e_exci[1:]):
+            f.write('{} {:.7f}\n'.format(i + 1, e))
+
+        for i in range(len(self)):
+            for j in range(0, i + 1):
+                f.write('{} {} {:.7f} {:.7f} {:.7f}\n'.format(i, j, *self.t_dips[i, j]))
 
     def response_tensor(
             self,

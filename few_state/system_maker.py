@@ -39,7 +39,7 @@ def make_system_from_hamiltonian(hamiltonian: NDArray, CT_dipoles: List[NDArray]
 
     e_exci = eigv[1:] - eigv[0]
 
-    C = eigh.T # state is the first index
+    C = eigh.T  # state is the first index
 
     # dipoles
     dipole_matrix = _get_dipole_matrix(CT_dipoles, C)
@@ -67,6 +67,7 @@ def make_system_from_E2tT(E_VB: float, E_CT: float, t: float, T: float, CT_dipol
     # the rest is handled by the general function
     return make_system_from_hamiltonian(H, CT_dipoles)
 
+
 def make_system_from_mtT(m_CT: float, t: float, T: float, CT_dipoles: List[NDArray]) -> System:
     n = len(CT_dipoles)
 
@@ -83,12 +84,12 @@ def make_system_from_mtT(m_CT: float, t: float, T: float, CT_dipoles: List[NDArr
     C[0, 1:] = numpy.sqrt((1 + m_CT) / (2 * n))  # phi_g
 
     C[-1, 0] = numpy.sqrt((1 + m_CT) / 2)
-    C[-1, 1:] = -numpy.sqrt((1 - m_CT) / (2 * n)) # phi_f
+    C[-1, 1:] = -numpy.sqrt((1 - m_CT) / (2 * n))  # phi_f
 
     # phi_ei
     for i in range(1, n):
-        C[i, i + 1] = i / numpy.sqrt(i * (i+ 1))
-        C[i, 1:i + 1] = -1 / numpy.sqrt(i * (i+ 1))
+        C[i, i + 1] = i / numpy.sqrt(i * (i + 1))
+        C[i, 1:i + 1] = -1 / numpy.sqrt(i * (i + 1))
 
     # dipoles
     dipole_matrix = _get_dipole_matrix(CT_dipoles, C)
