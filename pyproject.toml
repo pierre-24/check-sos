@@ -46,7 +46,7 @@ dev = [
 "Source" = "https://github.com/pierre-24/check-sos/"
 
 [tool.setuptools]
-packages = ['sos']
+packages = ['sos', 'few_state']
 
 [tool.setuptools.dynamic]
 version = {attr = "sos.__version__"}

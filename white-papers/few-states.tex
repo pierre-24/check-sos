@@ -57,10 +57,10 @@ If the basis functions are orthogonal, i.e., $S_{ki} = \delta_{k,i}$, this reduc
 In the VB-$n$CT framework, corresponding to a $(n+1)$-state model, a set of orthogonal functions is employed consisting of one valence-bond (VB) state, $\phi_{VB}$, and $n$ charge-transfer (CT) states, $\{\phi_{CT,i}|0<i\leq n\}$. This leads to a model Hamiltonian, given by a $(n+1)\times(n+1)$ matrix and parameterized as follows:
 \begin{align}
 	&\braket{\phi_{VB}|\hat{H}|\phi_{VB}} = E_{VB}, 
-	\braket{\phi_{VB}|\hat{H}|\phi_{CT,i}} = t, \text{ and } 
+	\braket{\phi_{VB}|\hat{H}|\phi_{CT,i}} = -t, \text{ and } 
 	\braket{\phi_{CT,i}|\hat{H}|\phi_{CT,j}} = \begin{cases}
 		E_{CT} & \text{if } i=j,\\
-		T & \text{otherwise},
+		-T & \text{otherwise},
 	\end{cases}\label{eq:hamilonian}
 \end{align}
 where $E_{VB}$ and $E_{CT}$ denote the energies of the VB and CT states, respectively, while $t$ and $T$ are the transfer integrals. 
@@ -76,7 +76,7 @@ where $V = E_{CT} - E_{VB}$.
 The associated eigenfunctions are:
 \begin{align}
 	\ket{0} &= \cos\delta\,\ket{\phi_{VB}} + \frac{\sin\delta}{\sqrt{n}} \sum_{0<j\leq n} \ket{\phi_{CT,j}},\nonumber\\
-	\ket{e_i} &= \frac{1}{\sqrt{i(i+1)}}\left[i \ket{\phi_{CT,i+1}} - \sum_{0<j\leq i} \ket{\phi_{CT,j}}\right],\nonumber\\
+	\ket{e_i} &= \frac{1}{\sqrt{i(i+1)}}\left[- \sum_{0<j\leq i} \ket{\phi_{CT,j}} +  i \ket{\phi_{CT,i+1}}\right],\nonumber\\
 	\ket{f} &= \sin\delta\,\ket{\phi_{VB}} - \frac{\cos\delta}{\sqrt{n}} \sum_{0<j\leq n} \ket{\phi_{CT,j}},
 \end{align}
 where the mixing angle $\delta \in [0, \nicefrac{\pi}{2}]$ is introduced. For $0 \leq \delta < \nicefrac{\pi}{4}$, the ground state is VB-dominated, whereas for $\nicefrac{\pi}{4} < \delta \leq \nicefrac{\pi}{2}$, the CT state dominates. The point $\delta = \nicefrac{\pi}{4}$ is referred to as the \textit{cyanine limit}.
@@ -123,7 +123,7 @@ In the VB-$n$CT model, the dipole matrix elements $M_{\mu \nu} = \braket{\phi_\n
 		0 & \text{otherwise}.
 	\end{cases}
 \end{align}
-This results in a sparse, diagonal dipole matrix parameterized by a select set of CT dipole moments associated to each CT state, $\{\vec{\mu}_{CT,i} \mid 0 < i \leq n\}$.
+This results in a sparse, diagonal dipole matrix parameterized by a select set of CT dipole moments associated to each CT state, $\{\vec{\mu}_{CT,i} \mid 0 < i \leq n\}$. Generally, $\vec\mu_{CT, i} = \mu_{CT}\,\vec{e}_i$, where $\vec  e_i$ is a unit vector, so that all dipole have the same length, given by the quantity $\mu_{CT}$.
 
 
 \subsection{Parameterization of a VB-$n$CT model} \label{sec:param}
@@ -199,7 +199,7 @@ There are three non-null independent components: $\beta_{zzz}$,  $\beta_{(zyy)}$
 	&\hspace{1cm}\times\left\{\frac{1}{\left(3T + t\,\left[3\,\frac{1-m_{CT}}{1+m_{CT}}\right]^{\nicefrac{1}{2}}\right)^2} + \frac{2}{2t\,\left[\frac{3}{1-m_{CT}^2}\right]^{\nicefrac{1}{2}}\,\left(3T + t\,\left[3\,\frac{1-m_{CT}}{1+m_{CT}}\right]^{\nicefrac{1}{2}}\right)}\right\},\nonumber\\
 	\beta_{yyy} &= \frac{3}{4}\,(1+m_{CT})\,\frac{\mu_{CT}^3}{\left(3T + t\,\left[3\,\frac{1-m_{CT}}{1+m_{CT}}\right]^{\nicefrac{1}{2}}\right)^2}\,\sin^3\theta.\label{eq:4state}
 \end{align}
-The relationship $\beta_{yyy} = -\beta_{(yxx)}$ holds in this model,\footnote{Symmetry tables generally reports  $\beta_{yyy} = -\beta_{(yyx)}$, but it is just a matter of defining the $\sigma_v$. Also, this definition is consistent with $D_{3h}$.} as expected from $C_{3v}$ symmetry. Note that when $\theta=\SI{90}{°}$, the system correspond to a $D_{3h}$ symmetry, with $\beta_{zzz} = \beta_{(zyy)} = \beta_{(zxx)} = 0$.
+The relationship $\beta_{yyy} = -\beta_{(yxx)}$ holds in this model,\footnote{Symmetry tables generally reports  $\beta_{yyy} = -\beta_{(yyx)}$, but it is just a matter of defining the $\sigma_v$. Also, this definition is consistent with $D_{3h}$.} as expected from $C_{3v}$ symmetry. Note that when $\theta=\SI{90}{°}$, the system correspond to a $D_{3h}$ symmetry, with $\beta_{zzz} = \beta_{(zyy)} = \beta_{(zxx)} = 0$, and $\beta_{yyy}$ is the only remaining component.
 
 \paragraph{5-states ($T_d$) system.} For the sake of completeness, lets finally consider the $T_d$ geometry, which was first reviewed by Cho \emph{et al.} \cite{choNonlinearOpticalProperties2002}. The dipole moments are (arbitrarily) given by\begin{align}
 	&\vec\mu_{CT,1} = \mu_{CT}\,\frac{\sqrt{3}}{3}\,(1, 1, 1), \vec\mu_{CT,2} = \mu_{CT}\,\frac{\sqrt{3}}{3}\,(1, -1, -1), \nonumber\\
