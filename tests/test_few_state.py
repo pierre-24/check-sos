@@ -77,7 +77,7 @@ def test_make_system_mtT_dipoles():
     """Check dipoles. See Chapter 11 of my thesis for more details
     """
 
-    m_CT = -.2
+    m_CT = .1
     t = .05
     T = .01
     theta = numpy.deg2rad(60)

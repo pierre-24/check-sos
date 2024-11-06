@@ -55,7 +55,8 @@ version = {attr = "sos.__version__"}
 [project.scripts]
 
 # keep that alphabetical ;)
-compute-sos = 'sos.script:main'
+sos-create-system = 'few_state.script:main'
+sos-get-tensor = 'sos.script:main'
 
 [build-system]
 requires = ["setuptools>=43.0.0", "wheel"]

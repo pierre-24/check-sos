@@ -2,15 +2,13 @@ import argparse
 import sys
 import itertools
 
+from sos import HC_IN_EV, AU_TO_EV
 from sos.system import System
 
 from numpy.typing import NDArray
 
 
 tr_ = {0: 'x', 1: 'y', 2: 'z'}
-
-HC_IN_EV = 45.56335
-AU_TO_EV = 27.211386245981
 
 
 def get_preamble(fields, w) -> str:
@@ -56,7 +54,7 @@ def get_fields(inp: str) -> tuple:
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('source', help='System definition', type=argparse.FileType('r'), default=sys.stdin)
+    parser.add_argument('-i', '--input', help='System definition', type=argparse.FileType('r'), default=sys.stdin)
     parser.add_argument('-e', '--eV', help='energies are in eV', action='store_true')
     parser.add_argument('-n', '--nstates', type=int, help='number of excited states, if not provided', default=-1)
     parser.add_argument('-f', '--fields', type=get_fields, default='1 1', help='List of input fields')
@@ -66,15 +64,12 @@ def main():
 
     print(get_preamble(args.fields, args.omega))
 
-    try:
-        system = System.from_file(args.source, args.nstates)
+    system = System.from_file(args.input, args.nstates)
 
-        if args.eV:
-            system.e_exci /= AU_TO_EV
+    if args.eV:
+        system.e_exci /= AU_TO_EV
 
-        print_tensor(system.response_tensor(input_fields=args.fields, frequency=args.omega))
-    except Exception as e:
-        print(e, file=sys.stderr)
+    print_tensor(system.response_tensor(input_fields=args.fields, frequency=args.omega))
 
 
 if __name__ == '__main__':

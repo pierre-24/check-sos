@@ -110,7 +110,7 @@ This parameter, $m_{CT}$, ranges from $-1$ (VB-dominated) to $+1$ (CT-dominated)
 
 To utilize the SOS expression, both excitation energies (calculated, in the VB-$n$CT model, as differences between eigenvalues, given in Eq.~\eqref{eq:energies}) and transition dipoles are required. In general, transition dipoles are computed as follows:
 \begin{equation}
-	\vec{\mu}_{ij} = \braket{i | \hat{\mu} | j} = \sum_{\nu \kappa} (C_{i \nu})^\dagger C_{j \kappa} \, \braket{\phi_\nu | \hat{\mu} | \phi_\kappa},
+	\vec{\mu}_{ij} = \braket{i | \hat{\mu} | j} = \sum_{\nu \kappa} C_{i \nu} C_{j \kappa} \, \braket{\phi_\nu | \hat{\mu} | \phi_\kappa} = C\,M\,C^\dagger,
 \end{equation}
 where $\ket{i} = \sum_\nu C_{i \nu} \, \ket{\phi_\nu}$ represents the electronic states of the system, $C_{i \nu}$ are the coefficients in the state expansion, and $\ket{\phi_\nu}$ are the basis functions. 
 
@@ -134,6 +134,10 @@ As outlined in Sections \ref{sec:hamiltonian} and \ref{sec:dipoles}, a VB-$n$CT 
 	\item Alternatively, by applying the conditions in Eqs.~\eqref{eq:cot} and \eqref{eq:eorig}: specified by $t$, $T$, and one of the mixing parameters defined in Section \ref{sec:hamiltonian} (such as $\delta$, $\ell_{CT}$, or $m_{CT}$).
 \end{enumerate}
 This allows a straightforward implementation of this model in Python, which outputs excitation energies and transition dipole moments.
+
+\section{Results}
+
+Using Eqs.~\ref{eq:2state}-\ref{eq:4state} allows to check  the implementation. It works ;)
 
 
 \clearpage
