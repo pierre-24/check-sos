@@ -23,6 +23,8 @@ pip install git+https://github.com/pierre-24/check-sos.git
 
 ## Usage
 
+**Note:** these program generally use atomic unit as input and output. The `--eV` option only affects excitation energies.
+
 In order to compute a nonlinear tensor using SOS, use:
 
 ```bash 
@@ -43,7 +45,7 @@ sos-create-system tests/CT_dipoles.txt -t .05 -T .01 -m 0.2
 
 Options are:
 
-+ `-t`, `-T` and `-m`: values for $t$, $T$ and $m_{CT}$, as described in Section 2.3 of [this document](white-papers/few-states.pdf).
++ `-t`, `-T` and `-m`: values for $t$, $T$ and $m_{CT}$, as described in Section 2.3 of [this document](white-papers/few-states.pdf). All in atomic units.
 + `--eV` to output energies in eV rather than atomic unit, which is the default.
 
 It is possible to combine both commands:
