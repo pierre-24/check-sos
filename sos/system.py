@@ -13,10 +13,17 @@ class ComponentsIterator:
     """Iterate over (unique) components of a NLO tensor
     """
 
-    def __init__(self, input_fields: Iterable[int]):
-        self.fields = [-sum(input_fields)] + list(input_fields)
+    def __init__(self, input_fields: Iterable[int], use_full: bool = True):
+        assert all(type(x) is int for x in input_fields)
 
-        self.each = collections.Counter(self.fields)
+        self.fields = [-sum(input_fields)] + list(input_fields)
+        self._f = self.fields.copy()
+
+        # small trick to differentiate \omega_\sigma from the rest if intrinsic
+        if not use_full:
+            self._f[0] = 's'
+
+        self.each = collections.Counter(self._f)
         self.last = {}
 
         # prepare a ideal→actual map
@@ -27,7 +34,7 @@ class ComponentsIterator:
             self.last[c] = N
             N += n
 
-        for i, field in enumerate(self.fields):
+        for i, field in enumerate(self._f):
             self.ideal_to_actual[i] = self.last[field]
             self.last[field] += 1
 
@@ -71,7 +78,7 @@ class ComponentsIterator:
 
         # fetch components for each type of fields
         c_with_field = dict((f, []) for f in self.each.keys())
-        for i, field in enumerate(self.fields):
+        for i, field in enumerate(self._f):
             c_with_field[field].append(component[i])
 
         # permute
@@ -84,9 +91,9 @@ class ComponentsIterator:
 
 
 class SOSMethod(enum.Enum):
-    GENERAL = enum.auto
-    FLUCTUATION_DIVERGENT = enum.auto
-    FLUCTUATION_NONDIVERGENT = enum.auto
+    GENERAL = enum.auto()
+    FLUCT_DIVERGENT = enum.auto()
+    FLUCT_NON_DIVERGENT = enum.auto()
 
 
 class System:
@@ -172,7 +179,7 @@ class System:
             self,
             input_fields: tuple = (1, 1),
             frequency: float = 0,
-            method: SOSMethod = SOSMethod.FLUCTUATION_NONDIVERGENT
+            method: SOSMethod = SOSMethod.FLUCT_NON_DIVERGENT,
     ) -> NDArray:
         """Get a response tensor, a given SOS formula
         """
@@ -181,9 +188,9 @@ class System:
             raise Exception('input fields is empty?!?')
 
         compute_component = {
-            SOSMethod.GENERAL: self.response_tensor_element_g,
-            SOSMethod.FLUCTUATION_DIVERGENT: self.response_tensor_element_f,
-            SOSMethod.FLUCTUATION_NONDIVERGENT: lambda c_, e_: self.response_tensor_element_f(c_, e_, False)
+            SOSMethod.GENERAL: self.response_tensor_element_nr_g,
+            SOSMethod.FLUCT_DIVERGENT: self.response_tensor_element_nr_f,
+            SOSMethod.FLUCT_NON_DIVERGENT: lambda c_, e_: self.response_tensor_element_nr_f(c_, e_, False)
         }[method]
 
         it = ComponentsIterator(input_fields)
@@ -198,7 +205,36 @@ class System:
 
         return t
 
-    def response_tensor_element_g(self, component: tuple, e_fields: List[float]) -> float:
+    def response_tensor_resonant(
+            self,
+            input_fields: tuple = (1, 1),
+            frequency: float = 0,
+            damping: float = 0,
+            method: SOSMethod = SOSMethod.FLUCT_NON_DIVERGENT,
+    ) -> NDArray:
+        """Get a response tensor, a given SOS formula
+        """
+
+        if len(input_fields) == 0:
+            raise Exception('input fields is empty?!?')
+
+        compute_component = {
+            SOSMethod.GENERAL: self.response_tensor_element_g,
+        }[method]
+
+        it = ComponentsIterator(input_fields, use_full=False)
+        t = numpy.zeros(numpy.repeat(3, len(it.fields)))
+        e_fields = list(i * frequency for i in it.fields)
+
+        for c in it:
+            component = compute_component(c, e_fields, damping)
+
+            for ce in it.reverse(c):
+                t[ce] = component
+
+        return t
+
+    def response_tensor_element_nr_g(self, component: tuple, e_fields: List[float]) -> float:
         """Compute the value of a component of a response tensor, using the most generic formula, Eq. (1) of text.
         """
 
@@ -225,7 +261,8 @@ class System:
 
         return value * num_perm
 
-    def response_tensor_element_f(self, component: tuple, e_fields: List[float], use_divergent: bool = True) -> float:
+    def response_tensor_element_nr_f(
+            self, component: tuple, e_fields: List[float], use_divergent: bool = True) -> float:
         """
         Compute the value of a component of a response tensor, using fluctuation dipoles.
         It corresponds to Eq. (6) of the text.
@@ -361,3 +398,20 @@ class System:
                     value += numpy.prod(dips) / numpy.prod(ens)
 
         return -.5 * value
+
+    def response_tensor_element_g(self, component: tuple, e_fields: List[float], damping: float) -> float:
+        """Compute the value of a component of a response tensor, using the most generic formula, Eq. (1) of text.
+        """
+
+        assert len(component) == len(e_fields)
+
+        value = .0
+
+        head = (component[0], e_fields[0])
+        to_permute = list(zip(component[1:], e_fields[1:]))
+        num_perm = numpy.prod([math.factorial(i) for i in collections.Counter(to_permute).values()])
+
+        for p in more_itertools.unique_everseen(itertools.permutations(to_permute)):
+            print(head, p)
+
+        return value * num_perm
