@@ -56,6 +56,31 @@ def test_iter_quadratic():
     )
 
 
+def test_iter_intrinsic_quadratic():
+    # only static will be different
+    it_static = ComponentsIterator((0, 0), use_full=False)
+    assert it_static.fields == ['s', 0, 0]
+    assert len(it_static) == 18
+    assert set(it_static.iter()) == set(
+        tuple(more_itertools.collapse(i)) for i in itertools.product(
+            range(3), itertools.combinations_with_replacement(range(3), 2)
+        )
+    )
+
+    assert set(it_static.reverse((0, 0, 0))) == {(0, 0, 0)}
+    assert set(it_static.reverse((0, 0, 1))) == set(
+        tuple(more_itertools.collapse(i)) for i in itertools.product(
+            [0], itertools.permutations([0, 1])
+        )
+    )
+
+    assert set(it_static.reverse((0, 1, 2))) == set(
+        tuple(more_itertools.collapse(i)) for i in itertools.product(
+            [0], itertools.permutations([1, 2])
+        )
+    )
+
+
 def test_iter_cubic():
     # static
     it_static = ComponentsIterator((0, 0, 0))
@@ -115,5 +140,43 @@ def test_iter_cubic():
     assert set(it_THG.reverse((0, 1, 2, 1))) == set(
         tuple(more_itertools.collapse(i)) for i in itertools.product(
             [0], itertools.permutations([1, 2, 1])
+        )
+    )
+
+
+def test_iter_intrinsic_cubic():
+    it_static = ComponentsIterator((0, 0, 0), use_full=False)
+    assert it_static.fields == ['s', 0, 0, 0]
+    assert set(it_static.iter()) == set(
+        tuple(more_itertools.collapse(i)) for i in itertools.product(
+            range(3), itertools.combinations_with_replacement(range(3), 3)
+        )
+    )
+
+    assert set(it_static.reverse((0, 0, 0, 0))) == {(0, 0, 0, 0)}
+
+    assert set(it_static.reverse((0, 0, 0, 1))) == set(
+        tuple(more_itertools.collapse(i)) for i in itertools.product(
+            [0], itertools.permutations([0, 0, 1])
+        )
+    )
+
+    assert set(it_static.reverse((0, 1, 2, 1))) == set(
+        tuple(more_itertools.collapse(i)) for i in itertools.product(
+            [0], itertools.permutations([1, 2, 1])
+        )
+    )
+
+    # DFWM (-w;w,-w,w)
+    it_DFWM = ComponentsIterator((1, -1, 1), use_full=False)
+    assert it_DFWM.fields == ['s', 1, -1, 1]
+
+    assert set(it_DFWM.iter()) == set(  # this one needs to be reordered on the fly
+        (x[0], x[2], x[1], x[3]) for x in (
+            tuple(more_itertools.collapse(i)) for i in itertools.product(
+                range(3),  # for 's'
+                range(3),  # for -1
+                itertools.combinations_with_replacement(range(3), 2),  # for 1
+            )
         )
     )

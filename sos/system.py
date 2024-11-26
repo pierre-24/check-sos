@@ -13,8 +13,14 @@ class ComponentsIterator:
     """Iterate over (unique) components of a NLO tensor
     """
 
-    def __init__(self, input_fields: Iterable[int]):
+    def __init__(self, input_fields: Iterable[int], use_full: bool = True):
+        assert all(type(x) is int for x in input_fields)
+
         self.fields = [-sum(input_fields)] + list(input_fields)
+
+        # small trick to differentiate \omega_\sigma from the rest if intrinsic
+        if not use_full:
+            self.fields[0] = 's'
 
         self.each = collections.Counter(self.fields)
         self.last = {}
