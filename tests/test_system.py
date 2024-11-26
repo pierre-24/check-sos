@@ -50,7 +50,7 @@ def test_read_system():
     assert numpy.allclose(system.t_dips, t_dips_3s)
 
 
-def test_divergent():
+def test_non_responant_divergent():
     """
     Test the divergent cases (general formula vs fluctuation dipole with divergent formula for secular terms),
     so check against harmonic generation
@@ -67,16 +67,16 @@ def test_divergent():
 
         assert numpy.allclose(
             system_2s.response_tensor(fields, w, method=SOSMethod.GENERAL),
-            system_2s.response_tensor(fields, w, method=SOSMethod.FLUCTUATION_DIVERGENT)
+            system_2s.response_tensor(fields, w, method=SOSMethod.FLUCT_DIVERGENT)
         )
 
         assert numpy.allclose(
             system_3s.response_tensor(fields, w, method=SOSMethod.GENERAL),
-            system_3s.response_tensor(fields, w, method=SOSMethod.FLUCTUATION_DIVERGENT)
+            system_3s.response_tensor(fields, w, method=SOSMethod.FLUCT_DIVERGENT)
         )
 
 
-def test_non_divergent():
+def test_non_resonant_non_divergent():
     """
     Test the non-divergent case (fluctuation dipole with divergent vs non-divergent formula for secular terms).
     """
@@ -91,13 +91,13 @@ def test_non_divergent():
         print(fields)
 
         assert numpy.allclose(
-            system_2s.response_tensor(fields, w, method=SOSMethod.FLUCTUATION_DIVERGENT),
-            system_2s.response_tensor(fields, w, method=SOSMethod.FLUCTUATION_NONDIVERGENT)
+            system_2s.response_tensor(fields, w, method=SOSMethod.FLUCT_DIVERGENT),
+            system_2s.response_tensor(fields, w, method=SOSMethod.FLUCT_NON_DIVERGENT)
         )
 
         assert numpy.allclose(
-            system_3s.response_tensor(fields, w, method=SOSMethod.FLUCTUATION_DIVERGENT),
-            system_3s.response_tensor(fields, w, method=SOSMethod.FLUCTUATION_NONDIVERGENT)
+            system_3s.response_tensor(fields, w, method=SOSMethod.FLUCT_DIVERGENT),
+            system_3s.response_tensor(fields, w, method=SOSMethod.FLUCT_NON_DIVERGENT)
         )
 
 
@@ -112,5 +112,5 @@ def test_non_divergent_not_harmonic_generation():
     for fields in [(0, 0, 0), (1, 0, 0), (1, 1, 0), (1, -1, 1)]:
         print(fields)
 
-        t = system_3s.response_tensor(fields, w, method=SOSMethod.FLUCTUATION_NONDIVERGENT)
+        t = system_3s.response_tensor(fields, w, method=SOSMethod.FLUCT_NON_DIVERGENT)
         assert all(x != numpy.inf for x in t.flatten())

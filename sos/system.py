@@ -84,9 +84,9 @@ class ComponentsIterator:
 
 
 class SOSMethod(enum.Enum):
-    GENERAL = enum.auto
-    FLUCTUATION_DIVERGENT = enum.auto
-    FLUCTUATION_NONDIVERGENT = enum.auto
+    GENERAL = enum.auto()
+    FLUCT_DIVERGENT = enum.auto()
+    FLUCT_NON_DIVERGENT = enum.auto()
 
 
 class System:
@@ -172,7 +172,7 @@ class System:
             self,
             input_fields: tuple = (1, 1),
             frequency: float = 0,
-            method: SOSMethod = SOSMethod.FLUCTUATION_NONDIVERGENT
+            method: SOSMethod = SOSMethod.FLUCT_NON_DIVERGENT,
     ) -> NDArray:
         """Get a response tensor, a given SOS formula
         """
@@ -181,9 +181,9 @@ class System:
             raise Exception('input fields is empty?!?')
 
         compute_component = {
-            SOSMethod.GENERAL: self.response_tensor_element_g,
-            SOSMethod.FLUCTUATION_DIVERGENT: self.response_tensor_element_f,
-            SOSMethod.FLUCTUATION_NONDIVERGENT: lambda c_, e_: self.response_tensor_element_f(c_, e_, False)
+            SOSMethod.GENERAL: self.response_tensor_element_nr_g,
+            SOSMethod.FLUCT_DIVERGENT: self.response_tensor_element_nr_f,
+            SOSMethod.FLUCT_NON_DIVERGENT: lambda c_, e_: self.response_tensor_element_nr_f(c_, e_, False)
         }[method]
 
         it = ComponentsIterator(input_fields)
@@ -198,7 +198,7 @@ class System:
 
         return t
 
-    def response_tensor_element_g(self, component: tuple, e_fields: List[float]) -> float:
+    def response_tensor_element_nr_g(self, component: tuple, e_fields: List[float]) -> float:
         """Compute the value of a component of a response tensor, using the most generic formula, Eq. (1) of text.
         """
 
@@ -225,7 +225,8 @@ class System:
 
         return value * num_perm
 
-    def response_tensor_element_f(self, component: tuple, e_fields: List[float], use_divergent: bool = True) -> float:
+    def response_tensor_element_nr_f(
+            self, component: tuple, e_fields: List[float], use_divergent: bool = True) -> float:
         """
         Compute the value of a component of a response tensor, using fluctuation dipoles.
         It corresponds to Eq. (6) of the text.
