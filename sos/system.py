@@ -17,12 +17,13 @@ class ComponentsIterator:
         assert all(type(x) is int for x in input_fields)
 
         self.fields = [-sum(input_fields)] + list(input_fields)
+        self._f = self.fields.copy()
 
         # small trick to differentiate \omega_\sigma from the rest if intrinsic
         if not use_full:
-            self.fields[0] = 's'
+            self._f[0] = 's'
 
-        self.each = collections.Counter(self.fields)
+        self.each = collections.Counter(self._f)
         self.last = {}
 
         # prepare a ideal→actual map
@@ -33,7 +34,7 @@ class ComponentsIterator:
             self.last[c] = N
             N += n
 
-        for i, field in enumerate(self.fields):
+        for i, field in enumerate(self._f):
             self.ideal_to_actual[i] = self.last[field]
             self.last[field] += 1
 
@@ -77,7 +78,7 @@ class ComponentsIterator:
 
         # fetch components for each type of fields
         c_with_field = dict((f, []) for f in self.each.keys())
-        for i, field in enumerate(self.fields):
+        for i, field in enumerate(self._f):
             c_with_field[field].append(component[i])
 
         # permute
