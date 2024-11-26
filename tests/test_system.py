@@ -50,7 +50,7 @@ def test_read_system():
     assert numpy.allclose(system.t_dips, t_dips_3s)
 
 
-def test_non_responant_divergent():
+def test_non_resonant_divergent():
     """
     Test the divergent cases (general formula vs fluctuation dipole with divergent formula for secular terms),
     so check against harmonic generation
@@ -114,3 +114,14 @@ def test_non_divergent_not_harmonic_generation():
 
         t = system_3s.response_tensor(fields, w, method=SOSMethod.FLUCT_NON_DIVERGENT)
         assert all(x != numpy.inf for x in t.flatten())
+
+
+def test_resonant_divergent():
+    """
+    Test the divergent cases (general formula vs fluctuation dipole with divergent formula for secular terms),
+    so check against harmonic generation
+    """
+
+    system_2s = System([.7, ], t_dips_2s)
+
+    system_2s.response_tensor_resonant(frequency=.1, method=SOSMethod.GENERAL)

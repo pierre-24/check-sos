@@ -205,6 +205,35 @@ class System:
 
         return t
 
+    def response_tensor_resonant(
+            self,
+            input_fields: tuple = (1, 1),
+            frequency: float = 0,
+            damping: float = 0,
+            method: SOSMethod = SOSMethod.FLUCT_NON_DIVERGENT,
+    ) -> NDArray:
+        """Get a response tensor, a given SOS formula
+        """
+
+        if len(input_fields) == 0:
+            raise Exception('input fields is empty?!?')
+
+        compute_component = {
+            SOSMethod.GENERAL: self.response_tensor_element_g,
+        }[method]
+
+        it = ComponentsIterator(input_fields, use_full=False)
+        t = numpy.zeros(numpy.repeat(3, len(it.fields)))
+        e_fields = list(i * frequency for i in it.fields)
+
+        for c in it:
+            component = compute_component(c, e_fields, damping)
+
+            for ce in it.reverse(c):
+                t[ce] = component
+
+        return t
+
     def response_tensor_element_nr_g(self, component: tuple, e_fields: List[float]) -> float:
         """Compute the value of a component of a response tensor, using the most generic formula, Eq. (1) of text.
         """
@@ -369,3 +398,20 @@ class System:
                     value += numpy.prod(dips) / numpy.prod(ens)
 
         return -.5 * value
+
+    def response_tensor_element_g(self, component: tuple, e_fields: List[float], damping: float) -> float:
+        """Compute the value of a component of a response tensor, using the most generic formula, Eq. (1) of text.
+        """
+
+        assert len(component) == len(e_fields)
+
+        value = .0
+
+        head = (component[0], e_fields[0])
+        to_permute = list(zip(component[1:], e_fields[1:]))
+        num_perm = numpy.prod([math.factorial(i) for i in collections.Counter(to_permute).values()])
+
+        for p in more_itertools.unique_everseen(itertools.permutations(to_permute)):
+            print(head, p)
+
+        return value * num_perm
