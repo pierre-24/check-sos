@@ -223,7 +223,7 @@ class System:
         }[method]
 
         it = ComponentsIterator(input_fields, use_full=False)
-        t = numpy.zeros(numpy.repeat(3, len(it.fields)))
+        t = numpy.zeros(numpy.repeat(3, len(it.fields)), dtype=complex)
         e_fields = list(i * frequency for i in it.fields)
 
         for c in it:
@@ -406,12 +406,33 @@ class System:
         assert len(component) == len(e_fields)
 
         value = .0
+        imag_part = damping * 1j / 2
 
         head = (component[0], e_fields[0])
         to_permute = list(zip(component[1:], e_fields[1:]))
         num_perm = numpy.prod([math.factorial(i) for i in collections.Counter(to_permute).values()])
 
         for p in more_itertools.unique_everseen(itertools.permutations(to_permute)):
-            print(head, p)
+            circular_buffer = [head] + list(p)
+
+            for np in range(len(component)):
+
+                for states in itertools.product(range(0, len(self)), repeat=len(component) - 1):
+                    stx = list(states)
+                    stx.append(0)
+                    stx.insert(0, 0)
+
+                    dips = [self.t_dips[stx[i], stx[i + 1], circular_buffer[i][0]] for i in range(len(component))]
+
+                    ens = [
+                        self.e_exci[e] + sum(circular_buffer[j][1] for j in range(i + 1)) for i, e in enumerate(states)
+                    ]
+
+                    ens = [x + (-imag_part if i >= np else imag_part) for i, x in enumerate(ens)]  # add imaginary part
+
+                    value += numpy.prod(dips) / numpy.prod(ens)
+
+                # advance circular buffer
+                circular_buffer.append(circular_buffer.pop(0))
 
         return value * num_perm

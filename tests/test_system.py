@@ -118,10 +118,32 @@ def test_non_divergent_not_harmonic_generation():
 
 def test_resonant_divergent():
     """
-    Test the divergent cases (general formula vs fluctuation dipole with divergent formula for secular terms),
-    so check against harmonic generation
+    Check that resonant and non-resonant formula provide the same result if damping is 0
     """
 
     system_2s = System([.7, ], t_dips_2s)
+    system_3s = System([.7, .9], t_dips_3s)
 
-    system_2s.response_tensor_resonant(frequency=.1, method=SOSMethod.GENERAL)
+    w = .1
+
+    for n in range(1, 5):
+        fields = tuple(1 for _ in range(n))
+        print(fields)
+
+        tr2s = system_2s.response_tensor_resonant(fields, w, method=SOSMethod.GENERAL)
+
+        assert numpy.allclose(
+            system_2s.response_tensor(fields, w, method=SOSMethod.GENERAL),
+            tr2s.real
+        )
+
+        assert numpy.allclose(tr2s.imag, 0)
+
+        tr3s = system_3s.response_tensor_resonant(fields, w, method=SOSMethod.GENERAL)
+
+        assert numpy.allclose(
+            system_3s.response_tensor(fields, w, method=SOSMethod.GENERAL),
+            tr3s.real
+        )
+
+        assert numpy.allclose(tr3s.imag, 0)
