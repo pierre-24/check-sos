@@ -220,6 +220,7 @@ class System:
 
         compute_component = {
             SOSMethod.GENERAL: self.response_tensor_element_g,
+            SOSMethod.FLUCT_DIVERGENT: self.response_tensor_element_f,
         }[method]
 
         it = ComponentsIterator(input_fields, use_full=False)
@@ -439,6 +440,7 @@ class System:
 
     def response_tensor_element_f(self, component: tuple, e_fields: List[float], damping: float) -> float:
         """Compute the value of a component of a (resonant) response tensor.
+        Do not account for secular terms (yet)
         """
 
         assert len(component) == len(e_fields)

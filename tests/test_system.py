@@ -158,20 +158,33 @@ def test_resonant_damping_2s_alpha():
 
     damping = 1e-2
 
-    for w in [.1, .2]:
-        bwg = system_2s.response_tensor_element_g((0, 0), [-w, w], damping=damping)
-        bwgf = system_2s.response_tensor_element_f((0, 0), [-w, w], damping=damping)
+    for w in [.1, .2, .3, .35]:
 
-        print(w, bwg, bwgf)
-
-        assert numpy.allclose(bwg, bwgf)
+        assert numpy.allclose(
+            system_2s.response_tensor_resonant((0, ), w, damping=damping, method=SOSMethod.GENERAL),
+            system_2s.response_tensor_resonant((0, ), w, damping=damping, method=SOSMethod.FLUCT_DIVERGENT)
+        )
 
 
 def test_resonant_damping_2s_beta():
     """Check against 2-state frequency dispersion formula from Berkovic et al. (https://doi.org/10.1063/1.480991).
     """
 
+    # TODO: what if the ground state has an infinite lifetime, then?
+    def f_berkovic(w0, w, g):
+        g_ = g * 1j
+
+        return w0 ** 2 / 3 * (1 / (
+            (w0 - g_ - 2 * w) * (w0 - g_ - w)
+        ) + 1 / (
+            (w0 + g_ + w) * (w0 - g_ - w)
+        ) + 1 / (
+            (w0 + g_ + 2 * w) * (w0 + g_ + w)
+        ))
+
     def beta_w_g(num, w0, w, g):
+        # from the formula by berkovic
+
         g_ = g * 1j
         return 2 * num * (1 / (
             (w0 - g_ - 2 * w) * (w0 - g_ - w)
@@ -182,6 +195,7 @@ def test_resonant_damping_2s_beta():
         ))
 
     def beta_w_gx(num, wx, wy, w, g):
+        # separate real and imaginary part
         g_ = g * 1j
 
         A = wx + w
@@ -219,7 +233,11 @@ def test_resonant_damping_2s_beta():
 
     damping = 1e-2
 
-    for w in [.1, .2]:
+    # TODO: no damping on the static value?
+    b0 = system_2s.response_tensor_element_f((0, 0, 0), [0, 0, 0], damping=0)
+    assert numpy.allclose(b0, beta_w_g(num, w0, 0, 0))
+
+    for w in [.1, .2, .3, .35]:
         bwg = system_2s.response_tensor_element_g((0, 0, 0), [-2 * w, w, w], damping=damping)
 
         assert numpy.allclose(
@@ -234,3 +252,6 @@ def test_resonant_damping_2s_beta():
 
         assert numpy.allclose(beta_w_g(num, w0, w, damping), bwgf)
         assert numpy.allclose(beta_w_gx(num, w0, w0, w, damping), bwgf)
+        assert numpy.allclose(bwgf / b0, f_berkovic(w0, w, damping))
+
+        assert not numpy.allclose(bwg, bwgf)
