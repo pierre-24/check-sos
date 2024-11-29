@@ -167,7 +167,8 @@ def test_resonant_damping_2s_alpha():
 
 
 def test_resonant_damping_2s_beta():
-    """Check against 2-state frequency dispersion formula from Berkovic et al. (https://doi.org/10.1063/1.480991).
+    """Check value of beta
+    against 2-state frequency dispersion formula from Berkovic et al. (https://doi.org/10.1063/1.480991).
     """
 
     # TODO: what if the ground state has an infinite lifetime, then?
@@ -194,36 +195,42 @@ def test_resonant_damping_2s_beta():
             (w0 + g_ + 2 * w) * (w0 + g_ + w)
         ))
 
-    def beta_w_gx(num, wx, wy, w, g):
-        # separate real and imaginary part
+    def beta_w_g2(num, wx, wy, w, gx, gy):
+        # a more complex version of the previous one
+
+        gx_, gy_ = gx * 1j, gy * 1j
+        return 2 * num * (1 / (
+            (wx - gx_ - 2 * w) * (wy - gy_ - w)
+        ) + 1 / (
+            (wx + gx_ + w) * (wy - gy_ - w)
+        ) + 1 / (
+            (wx + gx_ + w) * (wy + gy_ + 2 * w)
+        ))
+
+    def beta_w_gx(num, w0, w, g):
+        # separate real and imaginary part, if any
         g_ = g * 1j
 
-        A = wx + w
-        B = wy + 2 * w
+        A = w0 + w
+        B = w0 + 2 * w
 
         d = (A**2 + g**2) * (B**2 + g**2)
         real_part = (A * B - g**2) / d
-        imag_part = -g_ * (wx + wy + 3 * w) / d
+        imag_part = -g_ * (w0 + w0 + 3 * w) / d
 
-        # print('AB', 1 / ((wx + g_ + 2 * w) * (wy + g_ + w)), real_part, imag_part)
-
-        A = wx - 2 * w
-        B = wy - w
+        A = w0 - 2 * w
+        B = w0 - w
 
         d = (A**2 + g**2) * (B**2 + g**2)
         real_part += (A * B - g**2) / d
-        imag_part += g_ * (wx + wy - 3 * w) / d
+        imag_part += g_ * (w0 + w0 - 3 * w) / d
 
-        # print('AB', 1 / ((wx - g_- 2 * w) * (wy - g_ - w)), real_part, imag_part)
-
-        A = wx + w
-        B = wy - w
+        A = w0 + w
+        B = w0 - w
 
         d = (A**2 + g**2) * (B**2 + g**2)
         real_part += (A * B + g**2) / d
-        imag_part += g_ * (wx - wy + 2 * w) / d
-
-        # print('AB', 1 / ((wx + g_+  w) * (wy - g_ - w)), real_part, imag_part)
+        imag_part += g_ * (2 * w) / d
 
         return 2 * num * (real_part + imag_part)
 
@@ -242,16 +249,26 @@ def test_resonant_damping_2s_beta():
 
         assert numpy.allclose(
             bwg,
-            beta_w_gx(system_2s.t_dips[0, 0, 0] ** 3, 0, 0, w, damping)
-            + beta_w_gx(system_2s.t_dips[1, 0, 0] ** 2 * system_2s.t_dips[0, 0, 0], w0, 0, w, damping)  # noqa
-            + beta_w_gx(system_2s.t_dips[1, 0, 0] ** 2 * system_2s.t_dips[0, 0, 0], 0, w0, w, damping)  # noqa
-            + beta_w_gx(system_2s.t_dips[1, 0, 0] ** 2 * system_2s.t_dips[1, 1, 0], w0, w0, w, damping)  # noqa
+            beta_w_g2(system_2s.t_dips[0, 0, 0] ** 3, 0, 0, w, damping, damping)
+            + beta_w_g2(system_2s.t_dips[1, 0, 0] ** 2 * system_2s.t_dips[0, 0, 0], w0, 0, w, damping, damping)  # noqa
+            + beta_w_g2(system_2s.t_dips[1, 0, 0] ** 2 * system_2s.t_dips[0, 0, 0], 0, w0, w, damping, damping)  # noqa
+            + beta_w_g2(system_2s.t_dips[1, 0, 0] ** 2 * system_2s.t_dips[1, 1, 0], w0, w0, w, damping, damping) # noqa
         )
 
         bwgf = system_2s.response_tensor_element_f((0, 0, 0), [-2 * w, w, w], damping=damping)
 
+        """Not equal, but close:
+        print(
+            bwgf,
+            beta_w_g2(system_2s.t_dips[0, 0, 0] ** 3, 0, 0, w, 0, 0)
+            + beta_w_g2(system_2s.t_dips[1, 0, 0] ** 2 * system_2s.t_dips[0, 0, 0], w0, 0, w, damping, 0)  # noqa
+            + beta_w_g2(system_2s.t_dips[1, 0, 0] ** 2 * system_2s.t_dips[0, 0, 0], 0, w0, w, 0, damping)  # noqa
+            + beta_w_g2(system_2s.t_dips[1, 0, 0] ** 2 * system_2s.t_dips[1, 1, 0], w0, w0, w, damping, damping)  # noqa
+        )"""
+
         assert numpy.allclose(beta_w_g(num, w0, w, damping), bwgf)
-        assert numpy.allclose(beta_w_gx(num, w0, w0, w, damping), bwgf)
+        assert numpy.allclose(beta_w_g2(num, w0, w0, w, damping, damping), bwgf)
+        assert numpy.allclose(beta_w_gx(num, w0, w, damping), bwgf)
         assert numpy.allclose(bwgf / b0, f_berkovic(w0, w, damping))
 
         assert not numpy.allclose(bwg, bwgf)
