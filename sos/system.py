@@ -210,7 +210,7 @@ class System:
             input_fields: tuple = (1, 1),
             frequency: float = 0,
             damping: float = 0,
-            method: SOSMethod = SOSMethod.FLUCT_NON_DIVERGENT,
+            method: SOSMethod = SOSMethod.GENERAL,
     ) -> NDArray:
         """Get a response tensor, a given SOS formula
         """
@@ -400,13 +400,13 @@ class System:
         return -.5 * value
 
     def response_tensor_element_g(self, component: tuple, e_fields: List[float], damping: float) -> float:
-        """Compute the value of a component of a response tensor, using the most generic formula, Eq. (1) of text.
+        """Compute the value of a component of a (resonant) response tensor.
         """
 
         assert len(component) == len(e_fields)
 
         value = .0
-        imag_part = damping * 1j / 2
+        imag_part = damping * 1j
 
         head = (component[0], e_fields[0])
         to_permute = list(zip(component[1:], e_fields[1:]))
@@ -433,6 +433,49 @@ class System:
                     value += numpy.prod(dips) / numpy.prod(ens)
 
                 # advance circular buffer
-                circular_buffer.append(circular_buffer.pop(0))
+                circular_buffer.insert(0, circular_buffer.pop())
+
+        return value * num_perm
+
+    def response_tensor_element_f(self, component: tuple, e_fields: List[float], damping: float) -> float:
+        """Compute the value of a component of a (resonant) response tensor.
+        """
+
+        assert len(component) == len(e_fields)
+
+        value = .0
+        imag_part = damping * 1j
+
+        head = (component[0], e_fields[0])
+        to_permute = list(zip(component[1:], e_fields[1:]))
+        num_perm = numpy.prod([math.factorial(i) for i in collections.Counter(to_permute).values()])
+
+        for p in more_itertools.unique_everseen(itertools.permutations(to_permute)):
+            circular_buffer = [head] + list(p)
+
+            for np in range(len(component)):
+
+                for states in itertools.product(range(1, len(self)), repeat=len(component) - 1):
+                    stx = list(states)
+                    stx.append(0)
+                    stx.insert(0, 0)
+
+                    dips = [
+                        self.t_dips[stx[i], stx[i + 1], circular_buffer[i][0]] - (
+                            0 if stx[i] != stx[i + 1]
+                            else self.t_dips[0, 0, circular_buffer[i][0]]
+                        ) for i in range(len(component))
+                    ]
+
+                    ens = [
+                        self.e_exci[e] + sum(circular_buffer[j][1] for j in range(i + 1)) for i, e in enumerate(states)
+                    ]
+
+                    ens = [x + (-imag_part if i >= np else imag_part) for i, x in enumerate(ens)]  # add imaginary part
+
+                    value += numpy.prod(dips) / numpy.prod(ens)
+
+                # advance circular buffer
+                circular_buffer.insert(0, circular_buffer.pop())
 
         return value * num_perm

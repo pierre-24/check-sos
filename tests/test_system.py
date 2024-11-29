@@ -102,7 +102,7 @@ def test_non_resonant_non_divergent():
 
 
 def test_non_divergent_not_harmonic_generation():
-    """Check that non-divergent formula holds (i.e., nothing is imaginary) when the process involves a static field
+    """Check that non-divergent formula holds (i.e., nothing is infinite) when the process involves a static field
     """
 
     system_3s = System([.7, .9], t_dips_3s)
@@ -147,3 +147,30 @@ def test_resonant_divergent():
         )
 
         assert numpy.allclose(tr3s.imag, 0)
+
+
+def test_resonant_damping_2s():
+    """Check against 2-state frequency dispersion formula from Berkovic et al. (https://doi.org/10.1063/1.480991).
+    """
+
+    def beta_w_g(num, w0, w, g):
+        g_ = g * 1j
+        return 2 * num * (1 / (
+            (w0 - g_ - 2 * w) * (w0 - g_ - w)
+        ) + 1 / (
+            (w0 + g_ + w) * (w0 - g_ - w)
+        ) + 1 / (
+            (w0 + g_ + 2 * w) * (w0 + g_ + w)
+        ))
+
+    w0 = .7
+    system_2s = System([w0, ], t_dips_2s)
+    num = system_2s.t_dips[0, 1, 0] ** 2 * (system_2s.t_dips[1, 1, 0] - system_2s.t_dips[0, 0, 0])
+
+    damping = 1e-2
+
+    for w in [.1, ]:
+        # bwg = system_2s.response_tensor_element_g((0, 0, 0), [-2 * w, w, w], damping=damping)
+        bwgf = system_2s.response_tensor_element_f((0, 0, 0), [-2 * w, w, w], damping=damping)
+
+        assert numpy.allclose(beta_w_g(num, w0, w, damping), bwgf)
