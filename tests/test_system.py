@@ -149,7 +149,25 @@ def test_resonant_divergent():
         assert numpy.allclose(tr3s.imag, 0)
 
 
-def test_resonant_damping_2s():
+def test_resonant_damping_2s_alpha():
+    """??
+    """
+
+    w0 = .7
+    system_2s = System([w0, ], t_dips_2s)
+
+    damping = 1e-2
+
+    for w in [.1, .2]:
+        bwg = system_2s.response_tensor_element_g((0, 0), [-w, w], damping=damping)
+        bwgf = system_2s.response_tensor_element_f((0, 0), [-w, w], damping=damping)
+
+        print(w, bwg, bwgf)
+
+        assert numpy.allclose(bwg, bwgf)
+
+
+def test_resonant_damping_2s_beta():
     """Check against 2-state frequency dispersion formula from Berkovic et al. (https://doi.org/10.1063/1.480991).
     """
 
@@ -163,14 +181,56 @@ def test_resonant_damping_2s():
             (w0 + g_ + 2 * w) * (w0 + g_ + w)
         ))
 
+    def beta_w_gx(num, wx, wy, w, g):
+        g_ = g * 1j
+
+        A = wx + w
+        B = wy + 2 * w
+
+        d = (A**2 + g**2) * (B**2 + g**2)
+        real_part = (A * B - g**2) / d
+        imag_part = -g_ * (wx + wy + 3 * w) / d
+
+        # print('AB', 1 / ((wx + g_ + 2 * w) * (wy + g_ + w)), real_part, imag_part)
+
+        A = wx - 2 * w
+        B = wy - w
+
+        d = (A**2 + g**2) * (B**2 + g**2)
+        real_part += (A * B - g**2) / d
+        imag_part += g_ * (wx + wy - 3 * w) / d
+
+        # print('AB', 1 / ((wx - g_- 2 * w) * (wy - g_ - w)), real_part, imag_part)
+
+        A = wx + w
+        B = wy - w
+
+        d = (A**2 + g**2) * (B**2 + g**2)
+        real_part += (A * B + g**2) / d
+        imag_part += g_ * (wx - wy + 2 * w) / d
+
+        # print('AB', 1 / ((wx + g_+  w) * (wy - g_ - w)), real_part, imag_part)
+
+        return 2 * num * (real_part + imag_part)
+
     w0 = .7
     system_2s = System([w0, ], t_dips_2s)
     num = system_2s.t_dips[0, 1, 0] ** 2 * (system_2s.t_dips[1, 1, 0] - system_2s.t_dips[0, 0, 0])
 
     damping = 1e-2
 
-    for w in [.1, ]:
-        # bwg = system_2s.response_tensor_element_g((0, 0, 0), [-2 * w, w, w], damping=damping)
+    for w in [.1, .2]:
+        bwg = system_2s.response_tensor_element_g((0, 0, 0), [-2 * w, w, w], damping=damping)
+
+        assert numpy.allclose(
+            bwg,
+            beta_w_gx(system_2s.t_dips[0, 0, 0] ** 3, 0, 0, w, damping)
+            + beta_w_gx(system_2s.t_dips[1, 0, 0] ** 2 * system_2s.t_dips[0, 0, 0], w0, 0, w, damping)  # noqa
+            + beta_w_gx(system_2s.t_dips[1, 0, 0] ** 2 * system_2s.t_dips[0, 0, 0], 0, w0, w, damping)  # noqa
+            + beta_w_gx(system_2s.t_dips[1, 0, 0] ** 2 * system_2s.t_dips[1, 1, 0], w0, w0, w, damping)  # noqa
+        )
+
         bwgf = system_2s.response_tensor_element_f((0, 0, 0), [-2 * w, w, w], damping=damping)
 
         assert numpy.allclose(beta_w_g(num, w0, w, damping), bwgf)
+        assert numpy.allclose(beta_w_gx(num, w0, w0, w, damping), bwgf)

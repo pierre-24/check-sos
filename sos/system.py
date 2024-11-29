@@ -412,15 +412,15 @@ class System:
         to_permute = list(zip(component[1:], e_fields[1:]))
         num_perm = numpy.prod([math.factorial(i) for i in collections.Counter(to_permute).values()])
 
-        for p in more_itertools.unique_everseen(itertools.permutations(to_permute)):
-            circular_buffer = [head] + list(p)
+        for states in itertools.product(range(0, len(self)), repeat=len(component) - 1):
+            stx = list(states)
+            stx.append(0)
+            stx.insert(0, 0)
 
-            for np in range(len(component)):
+            for p in more_itertools.unique_everseen(itertools.permutations(to_permute)):
+                circular_buffer = [head] + list(p)
 
-                for states in itertools.product(range(0, len(self)), repeat=len(component) - 1):
-                    stx = list(states)
-                    stx.append(0)
-                    stx.insert(0, 0)
+                for np in range(len(component)):
 
                     dips = [self.t_dips[stx[i], stx[i + 1], circular_buffer[i][0]] for i in range(len(component))]
 
@@ -432,8 +432,8 @@ class System:
 
                     value += numpy.prod(dips) / numpy.prod(ens)
 
-                # advance circular buffer
-                circular_buffer.insert(0, circular_buffer.pop())
+                    # advance circular buffer
+                    circular_buffer.insert(0, circular_buffer.pop())
 
         return value * num_perm
 
