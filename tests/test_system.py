@@ -116,7 +116,7 @@ def test_non_divergent_not_harmonic_generation():
         assert all(x != numpy.inf for x in t.flatten())
 
 
-def test_resonant_divergent():
+def test_resonant_divergent_no_damping():
     """
     Check that resonant and non-resonant formula provide the same result if damping is 0
     """
@@ -149,8 +149,34 @@ def test_resonant_divergent():
         assert numpy.allclose(tr3s.imag, 0)
 
 
+def test_resonant_fluctuation_no_damping():
+    """
+    Check that general and fluctuation formula provide the same result if damping is 0
+    """
+
+    system_2s = System([.7, ], t_dips_2s)
+    system_3s = System([.7, .9], t_dips_3s)
+
+    w = .1
+
+    for n in range(1, 5):
+        fields = tuple(1 for _ in range(n))
+        print(fields)
+
+        assert numpy.allclose(
+            system_2s.response_tensor_resonant(fields, w, method=SOSMethod.GENERAL),
+            system_2s.response_tensor_resonant(fields, w, method=SOSMethod.FLUCT_DIVERGENT)
+        )
+
+        assert numpy.allclose(
+            system_3s.response_tensor_resonant(fields, w, method=SOSMethod.GENERAL),
+            system_3s.response_tensor_resonant(fields, w, method=SOSMethod.FLUCT_DIVERGENT)
+        )
+
+
 def test_resonant_damping_2s_alpha():
-    """??
+    """
+    Check that general and fluctuation formula give the same result if damping is not 0, for alpha.
     """
 
     w0 = .7
@@ -167,7 +193,8 @@ def test_resonant_damping_2s_alpha():
 
 
 def test_resonant_damping_2s_beta():
-    """Check value of beta
+    """
+    Check effect of damping on beta (where general and fluctuation formula do not give the same result!)
     against 2-state frequency dispersion formula from Berkovic et al. (https://doi.org/10.1063/1.480991).
     """
 

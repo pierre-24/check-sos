@@ -302,17 +302,17 @@ class System:
         if len(component) > 3:
             for set_g in range(1, len(component) - 2):
                 if use_divergent:
-                    value += self._secular_term_divergent(component, e_fields, (set_g, ))
+                    value += self._secular_term_nr_divergent(component, e_fields, (set_g,))
                 else:
-                    value += self._secular_term_non_divergent(component, e_fields, set_g)
+                    value += self._secular_term_nr_non_divergent(component, e_fields, set_g)
 
         # ad hoc correction for n=5
         if len(component) == 6 and use_divergent:
-            value += self._secular_term_divergent(component, e_fields, (1, 3))
+            value += self._secular_term_nr_divergent(component, e_fields, (1, 3))
 
         return value * num_perm
 
-    def _secular_term_divergent(self, component: tuple, e_fields: List[float], set_ground: tuple) -> float:
+    def _secular_term_nr_divergent(self, component: tuple, e_fields: List[float], set_ground: tuple) -> float:
         """Compute the additional secular term that happen when n > 2, but using a divergent definition.
 
         Implements parts of the Eq. (8) of the text, by setting in Eq. (7) the term a_i for all i in `set_ground`
@@ -348,7 +348,7 @@ class System:
 
         return value
 
-    def _secular_term_non_divergent(self, component: tuple, e_fields: List[float], set_ground: int) -> float:
+    def _secular_term_nr_non_divergent(self, component: tuple, e_fields: List[float], set_ground: int) -> float:
         """Implement Eq. (9) to provide a non-divergent secular term.
         """
 
@@ -444,6 +444,7 @@ class System:
         """
 
         assert len(component) == len(e_fields)
+        assert len(e_fields) < 6
 
         value = .0
         imag_part = damping * 1j
@@ -480,4 +481,53 @@ class System:
                 # advance circular buffer
                 circular_buffer.insert(0, circular_buffer.pop())
 
+        if len(component) > 3:
+            for set_g in range(1, len(component) - 2):
+                value += self._secular_term_divergent(component, e_fields, (set_g,), damping=damping)
+
         return value * num_perm
+
+    def _secular_term_divergent(
+            self, component: tuple, e_fields: List[float], set_ground: tuple, damping: float = 0) -> float:
+        """Compute the additional secular term that happen when n > 2, but using a divergent definition.
+        """
+
+        value = .0
+        imag_part = damping * 1j
+
+        head = (component[0], e_fields[0])
+        to_permute = list(zip(component[1:], e_fields[1:]))
+
+        for p in more_itertools.unique_everseen(itertools.permutations(to_permute)):
+            circular_buffer = [head] + list(p)
+
+            for np in range(len(component)):
+                for states in itertools.product(range(1, len(self)), repeat=len(component) - 1 - len(set_ground)):
+                    states = list(states)
+
+                    for g in set_ground:
+                        states.insert(g, 0)
+
+                    stx = list(states)
+                    stx.append(0)
+                    stx.insert(0, 0)
+
+                    dips = [
+                        self.t_dips[stx[i], stx[i + 1], circular_buffer[i][0]] - (
+                            0 if stx[i] != stx[i + 1]
+                            else self.t_dips[0, 0, circular_buffer[i][0]]
+                        ) for i in range(len(component))
+                    ]
+
+                    ens = [
+                        self.e_exci[e] + sum(circular_buffer[j][1] for j in range(i + 1)) for i, e in enumerate(states)
+                    ]
+
+                    ens = [x + (-imag_part if i >= np else imag_part) for i, x in enumerate(ens)]  # add imaginary part
+
+                    value += numpy.prod(dips) / numpy.prod(ens)
+
+                # advance circular buffer
+                circular_buffer.insert(0, circular_buffer.pop())
+
+        return value
