@@ -5,7 +5,7 @@ import enum
 import more_itertools
 import numpy
 
-from typing import List, Iterable, Self, TextIO
+from typing import List, Iterable, Self, TextIO, Iterator, Tuple
 from numpy.typing import NDArray
 
 
@@ -235,6 +235,12 @@ class System:
 
         return t
 
+    @staticmethod
+    def iter_permutation_non_resonant(to_permute: list) -> Iterator[list]:
+        """Permute components and electric fields for non-resonant cases
+        """
+        yield from more_itertools.unique_everseen(itertools.permutations(to_permute))
+
     def response_tensor_element_nr_g(self, component: tuple, e_fields: List[float]) -> float:
         """Compute the value of a component of a response tensor, using the most generic formula, Eq. (1) of text.
         """
@@ -246,7 +252,7 @@ class System:
         to_permute = list(zip(component, e_fields))
         num_perm = numpy.prod([math.factorial(i) for i in collections.Counter(to_permute).values()])
 
-        for p in more_itertools.unique_everseen(itertools.permutations(to_permute)):
+        for p in self.iter_permutation_non_resonant(to_permute):
             for states in itertools.product(range(0, len(self)), repeat=len(component) - 1):
                 stx = list(states)
                 stx.append(0)
@@ -280,7 +286,7 @@ class System:
         to_permute = list(zip(component, e_fields))
         num_perm = numpy.prod([math.factorial(i) for i in collections.Counter(to_permute).values()])
 
-        for p in more_itertools.unique_everseen(itertools.permutations(to_permute)):
+        for p in self.iter_permutation_non_resonant(to_permute):
             for states in itertools.product(range(1, len(self)), repeat=len(component) - 1):
                 stx = list(states)
                 stx.append(0)
@@ -322,7 +328,7 @@ class System:
         value = .0
         to_permute = list(zip(component, e_fields))
 
-        for p in more_itertools.unique_everseen(itertools.permutations(to_permute)):
+        for p in self.iter_permutation_non_resonant(to_permute):
             for states in itertools.product(range(1, len(self)), repeat=len(component) - 1 - len(set_ground)):
                 states = list(states)
 
@@ -356,7 +362,7 @@ class System:
 
         to_permute = list(zip(component, e_fields))
 
-        for p in more_itertools.unique_everseen(itertools.permutations(to_permute)):
+        for p in self.iter_permutation_non_resonant(to_permute):
             x = -sum(p[j][1] for j in range(set_ground + 1))
 
             for states in itertools.product(range(1, len(self)), repeat=len(component) - 2):
@@ -400,6 +406,20 @@ class System:
 
         return -.5 * value
 
+    @staticmethod
+    def iter_permutation_resonant(to_permute: list) -> Iterator[Tuple[list, int]]:
+        """Permute components and electric fields for resonant cases
+        """
+
+        for p in more_itertools.unique_everseen(itertools.permutations(to_permute[1:])):
+            circular_buffer = [to_permute[0]] + list(p)
+
+            for np in range(len(circular_buffer)):
+                yield circular_buffer, np
+
+                # advance circular buffer
+                circular_buffer.insert(0, circular_buffer.pop())
+
     def response_tensor_element_g(self, component: tuple, e_fields: List[float], damping: float) -> float:
         """Compute the value of a component of a (resonant) response tensor.
         """
@@ -409,8 +429,7 @@ class System:
         value = .0
         imag_part = damping * 1j
 
-        head = (component[0], e_fields[0])
-        to_permute = list(zip(component[1:], e_fields[1:]))
+        to_permute = list(zip(component, e_fields))
         num_perm = numpy.prod([math.factorial(i) for i in collections.Counter(to_permute).values()])
 
         for states in itertools.product(range(0, len(self)), repeat=len(component) - 1):
@@ -418,29 +437,24 @@ class System:
             stx.append(0)
             stx.insert(0, 0)
 
-            for p in more_itertools.unique_everseen(itertools.permutations(to_permute)):
-                circular_buffer = [head] + list(p)
+            for p, np in self.iter_permutation_resonant(to_permute):
 
-                for np in range(len(component)):
+                dips = [self.t_dips[stx[i], stx[i + 1], p[i][0]] for i in range(len(component))]
 
-                    dips = [self.t_dips[stx[i], stx[i + 1], circular_buffer[i][0]] for i in range(len(component))]
+                ens = [
+                    self.e_exci[e] + sum(p[j][1] for j in range(i + 1)) for i, e in enumerate(states)
+                ]
 
-                    ens = [
-                        self.e_exci[e] + sum(circular_buffer[j][1] for j in range(i + 1)) for i, e in enumerate(states)
-                    ]
+                ens = [x + (-imag_part if i >= np else imag_part) for i, x in enumerate(ens)]  # add imaginary part
 
-                    ens = [x + (-imag_part if i >= np else imag_part) for i, x in enumerate(ens)]  # add imaginary part
-
-                    value += numpy.prod(dips) / numpy.prod(ens)
-
-                    # advance circular buffer
-                    circular_buffer.insert(0, circular_buffer.pop())
+                value += numpy.prod(dips) / numpy.prod(ens)
 
         return value * num_perm
 
     def response_tensor_element_f(self, component: tuple, e_fields: List[float], damping: float) -> float:
         """Compute the value of a component of a (resonant) response tensor.
-        Do not account for secular terms (yet)
+
+        Works up to n=4.
         """
 
         assert len(component) == len(e_fields)
@@ -449,37 +463,30 @@ class System:
         value = .0
         imag_part = damping * 1j
 
-        head = (component[0], e_fields[0])
-        to_permute = list(zip(component[1:], e_fields[1:]))
+        to_permute = list(zip(component, e_fields))
         num_perm = numpy.prod([math.factorial(i) for i in collections.Counter(to_permute).values()])
 
-        for p in more_itertools.unique_everseen(itertools.permutations(to_permute)):
-            circular_buffer = [head] + list(p)
+        for p, np in self.iter_permutation_resonant(to_permute):
 
-            for np in range(len(component)):
+            for states in itertools.product(range(1, len(self)), repeat=len(component) - 1):
+                stx = list(states)
+                stx.append(0)
+                stx.insert(0, 0)
 
-                for states in itertools.product(range(1, len(self)), repeat=len(component) - 1):
-                    stx = list(states)
-                    stx.append(0)
-                    stx.insert(0, 0)
+                dips = [
+                    self.t_dips[stx[i], stx[i + 1], p[i][0]] - (
+                        0 if stx[i] != stx[i + 1]
+                        else self.t_dips[0, 0, p[i][0]]
+                    ) for i in range(len(component))
+                ]
 
-                    dips = [
-                        self.t_dips[stx[i], stx[i + 1], circular_buffer[i][0]] - (
-                            0 if stx[i] != stx[i + 1]
-                            else self.t_dips[0, 0, circular_buffer[i][0]]
-                        ) for i in range(len(component))
-                    ]
+                ens = [
+                    self.e_exci[e] + sum(p[j][1] for j in range(i + 1)) for i, e in enumerate(states)
+                ]
 
-                    ens = [
-                        self.e_exci[e] + sum(circular_buffer[j][1] for j in range(i + 1)) for i, e in enumerate(states)
-                    ]
+                ens = [x + (-imag_part if i >= np else imag_part) for i, x in enumerate(ens)]  # add imaginary part
 
-                    ens = [x + (-imag_part if i >= np else imag_part) for i, x in enumerate(ens)]  # add imaginary part
-
-                    value += numpy.prod(dips) / numpy.prod(ens)
-
-                # advance circular buffer
-                circular_buffer.insert(0, circular_buffer.pop())
+                value += numpy.prod(dips) / numpy.prod(ens)
 
         if len(component) > 3:
             for set_g in range(1, len(component) - 2):
@@ -495,39 +502,32 @@ class System:
         value = .0
         imag_part = damping * 1j
 
-        head = (component[0], e_fields[0])
-        to_permute = list(zip(component[1:], e_fields[1:]))
+        to_permute = list(zip(component, e_fields))
 
-        for p in more_itertools.unique_everseen(itertools.permutations(to_permute)):
-            circular_buffer = [head] + list(p)
+        for p, np in self.iter_permutation_resonant(to_permute):
+            for states in itertools.product(range(1, len(self)), repeat=len(component) - 1 - len(set_ground)):
+                states = list(states)
 
-            for np in range(len(component)):
-                for states in itertools.product(range(1, len(self)), repeat=len(component) - 1 - len(set_ground)):
-                    states = list(states)
+                for g in set_ground:
+                    states.insert(g, 0)
 
-                    for g in set_ground:
-                        states.insert(g, 0)
+                stx = list(states)
+                stx.append(0)
+                stx.insert(0, 0)
 
-                    stx = list(states)
-                    stx.append(0)
-                    stx.insert(0, 0)
+                dips = [
+                    self.t_dips[stx[i], stx[i + 1], p[i][0]] - (
+                        0 if stx[i] != stx[i + 1]
+                        else self.t_dips[0, 0, p[i][0]]
+                    ) for i in range(len(component))
+                ]
 
-                    dips = [
-                        self.t_dips[stx[i], stx[i + 1], circular_buffer[i][0]] - (
-                            0 if stx[i] != stx[i + 1]
-                            else self.t_dips[0, 0, circular_buffer[i][0]]
-                        ) for i in range(len(component))
-                    ]
+                ens = [
+                    self.e_exci[e] + sum(p[j][1] for j in range(i + 1)) for i, e in enumerate(states)
+                ]
 
-                    ens = [
-                        self.e_exci[e] + sum(circular_buffer[j][1] for j in range(i + 1)) for i, e in enumerate(states)
-                    ]
+                ens = [x + (-imag_part if i >= np else imag_part) for i, x in enumerate(ens)]  # add imaginary part
 
-                    ens = [x + (-imag_part if i >= np else imag_part) for i, x in enumerate(ens)]  # add imaginary part
-
-                    value += numpy.prod(dips) / numpy.prod(ens)
-
-                # advance circular buffer
-                circular_buffer.insert(0, circular_buffer.pop())
+                value += numpy.prod(dips) / numpy.prod(ens)
 
         return value
