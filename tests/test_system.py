@@ -299,3 +299,29 @@ def test_resonant_damping_2s_beta():
         assert numpy.allclose(bwgf / b0, f_berkovic(w0, w, damping))
 
         assert not numpy.allclose(bwg, bwgf)
+
+
+def test_resonant_fluctuation_damping():
+    """
+    Check that both fluctuation formula (with and without divergent secular terms) provide the same result
+    """
+
+    system_2s = System([.7, ], t_dips_2s)
+    system_3s = System([.7, .9], t_dips_3s)
+
+    w = .1
+    damping = 1e-1
+
+    for n in range(1, 5):
+        fields = tuple(1 for _ in range(n))
+        print(fields)
+
+        assert numpy.allclose(
+            system_2s.response_tensor_resonant(fields, w, method=SOSMethod.FLUCT_DIVERGENT, damping=damping),
+            system_2s.response_tensor_resonant(fields, w, method=SOSMethod.FLUCT_NON_DIVERGENT, damping=damping)
+        )
+
+        assert numpy.allclose(
+            system_3s.response_tensor_resonant(fields, w, method=SOSMethod.FLUCT_DIVERGENT, damping=damping),
+            system_3s.response_tensor_resonant(fields, w, method=SOSMethod.FLUCT_NON_DIVERGENT, damping=damping)
+        )

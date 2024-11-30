@@ -210,7 +210,7 @@ class System:
             input_fields: tuple = (1, 1),
             frequency: float = 0,
             damping: float = 0,
-            method: SOSMethod = SOSMethod.GENERAL,
+            method: SOSMethod = SOSMethod.FLUCT_NON_DIVERGENT,
     ) -> NDArray:
         """Get a response tensor, a given SOS formula
         """
@@ -221,6 +221,7 @@ class System:
         compute_component = {
             SOSMethod.GENERAL: self.response_tensor_element_g,
             SOSMethod.FLUCT_DIVERGENT: self.response_tensor_element_f,
+            SOSMethod.FLUCT_NON_DIVERGENT: lambda c_, e_, d_: self.response_tensor_element_f(c_, e_, d_, False)
         }[method]
 
         it = ComponentsIterator(input_fields, use_full=False)
@@ -451,9 +452,9 @@ class System:
 
         return value * num_perm
 
-    def response_tensor_element_f(self, component: tuple, e_fields: List[float], damping: float) -> float:
+    def response_tensor_element_f(
+            self, component: tuple, e_fields: List[float], damping: float = 0, use_divergent: bool = False) -> float:
         """Compute the value of a component of a (resonant) response tensor.
-
         Works up to n=4.
         """
 
@@ -490,7 +491,10 @@ class System:
 
         if len(component) > 3:
             for set_g in range(1, len(component) - 2):
-                value += self._secular_term_divergent(component, e_fields, (set_g,), damping=damping)
+                if use_divergent:
+                    value += self._secular_term_divergent(component, e_fields, (set_g,), damping=damping)
+                else:
+                    value += self._secular_term_non_divergent(component, e_fields, set_g)
 
         return value * num_perm
 
@@ -531,3 +535,59 @@ class System:
                 value += numpy.prod(dips) / numpy.prod(ens)
 
         return value
+
+    def _secular_term_non_divergent(
+            self, component: tuple, e_fields: List[float], set_ground: int, damping: float = 0) -> float:
+        """Provide a non-divergent secular term. Essentially, it is a translation of Eq. (9).
+        """
+
+        value = .0
+        imag_part = damping * 1j
+
+        to_permute = list(zip(component, e_fields))
+
+        for p, np in self.iter_permutation_resonant(to_permute):
+            x = -sum(p[j][1] for j in range(set_ground + 1))
+
+            for states in itertools.product(range(1, len(self)), repeat=len(component) - 2):
+                states = list(states)
+
+                states.insert(set_ground, 0)
+
+                stx = list(states)
+                stx.append(0)
+                stx.insert(0, 0)
+
+                # numerator of Eq. (9)
+                dips = [
+                    self.t_dips[stx[i], stx[i + 1], p[i][0]] - (
+                        0 if stx[i] != stx[i + 1]
+                        else self.t_dips[0, 0, p[i][0]]
+                    ) for i in range(len(component))
+                ]
+
+                # denominator of Eq. (9)
+                # TODO: there is probably a way to write a nicer code here, without all those `continue`.
+                for i in range(len(component) - 1):
+                    if i == set_ground:
+                        continue
+
+                    ens = []
+
+                    for l_ in range(i + 1):
+                        if l_ == set_ground:
+                            continue
+
+                        ens.append(self.e_exci[states[l_]] + sum(p[j][1] for j in range(l_ + 1)))
+
+                    for l_ in range(i, len(component) - 1):
+                        if l_ == set_ground:
+                            continue
+
+                        ens.append(self.e_exci[states[l_]] + sum(p[j][1] for j in range(l_ + 1)) + x)
+
+                    ens = [x + (-imag_part if i >= np else imag_part) for i, x in enumerate(ens)]  # add imaginary part
+
+                    value += numpy.prod(dips) / numpy.prod(ens)
+
+        return -.5 * value
