@@ -422,7 +422,8 @@ class System:
                 circular_buffer.insert(0, circular_buffer.pop())
 
     def response_tensor_element_g(self, component: tuple, e_fields: List[float], damping: float) -> float:
-        """Compute the value of a component of a (resonant) response tensor.
+        """Compute the value of a component of a (resonant) response tensor, using a non-fluctation version of Eq. (9).
+        However, it is **not** equivalent to Eq. (9), since it assumes that the ground state has a lifetime as well.
         """
 
         assert len(component) == len(e_fields)
@@ -454,8 +455,8 @@ class System:
 
     def response_tensor_element_f(
             self, component: tuple, e_fields: List[float], damping: float = 0, use_divergent: bool = False) -> float:
-        """Compute the value of a component of a (resonant) response tensor.
-        Works up to n=4.
+        """Compute the value of a component of a (resonant) response tensor, using Eq. (6),
+        but with Eq. (10) to provide a resonant version. Works up to n=4.
         """
 
         assert len(component) == len(e_fields)

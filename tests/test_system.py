@@ -325,3 +325,23 @@ def test_resonant_fluctuation_damping():
             system_3s.response_tensor_resonant(fields, w, method=SOSMethod.FLUCT_DIVERGENT, damping=damping),
             system_3s.response_tensor_resonant(fields, w, method=SOSMethod.FLUCT_NON_DIVERGENT, damping=damping)
         )
+
+
+def test_resonant_non_divergent_not_harmonic_generation():
+    """Check that in the case of resonant formula, using divergent and non-divergent actually provide the same result.
+
+    TODO: ... But should that be the case?
+    """
+
+    system_3s = System([.7, .9], t_dips_3s)
+
+    w = .1
+    damping = 1e-1
+
+    for fields in [(0, 0, 0), (1, 0, 0), (1, 1, 0), (1, -1, 1)]:
+        print(fields)
+
+        assert numpy.allclose(
+            system_3s.response_tensor_resonant(fields, w, method=SOSMethod.FLUCT_DIVERGENT, damping=damping),
+            system_3s.response_tensor_resonant(fields, w, method=SOSMethod.FLUCT_NON_DIVERGENT, damping=damping)
+        )

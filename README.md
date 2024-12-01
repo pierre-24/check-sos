@@ -35,7 +35,7 @@ Inputs are:
 
 + `-i`: input file in the MultiWFN format. Use `--eV` if the excitation energies are give in eV.
 + `-w` for the laser frequency, in atomic unit (default is 0).
-+ `-f` for a space-separated list of input field, $\{k_i\in\mathbb{N}|0<i\leq n\}$, as multipliers of the input frequency (given by `-w`) and corresponding to the tensor $X^{n}(-\omega_\sigma;k_1\omega,k_2\omega,...,k_n\omega)$. 
++ `-f` for a space-separated list of input field, $\\{k_i\in\mathbb{N}|0<i\leq n\\}$, as multipliers of the input frequency (given by `-w`) and corresponding to the tensor $X^{n}(-\omega_\sigma;k_1\omega,k_2\omega,...,k_n\omega)$. 
   For example, to compute $\beta(-2\omega;\omega,\omega)$ (SHG phenomenon), use `-f "1 1"` (which is the default). 
   For $\gamma(-\omega;\omega,-\omega,\omega)$, use `-f "1 -1 1"`.
 + `-d` to apply a damping factor (in au, default is 0).
