@@ -31,4 +31,4 @@ jobs:
         make lint
     - name: Tests
       run: |
-        make tests
+        make test
