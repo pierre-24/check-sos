@@ -432,7 +432,7 @@ class System:
         imag_part = damping * 1j
 
         to_permute = list(zip(component, e_fields))
-        num_perm = numpy.prod([math.factorial(i) for i in collections.Counter(to_permute).values()])
+        num_perm = numpy.prod([math.factorial(i) for i in collections.Counter(to_permute[1:]).values()])
 
         for states in itertools.product(range(0, len(self)), repeat=len(component) - 1):
             stx = list(states)
@@ -466,7 +466,7 @@ class System:
         imag_part = damping * 1j
 
         to_permute = list(zip(component, e_fields))
-        num_perm = numpy.prod([math.factorial(i) for i in collections.Counter(to_permute).values()])
+        num_perm = numpy.prod([math.factorial(i) for i in collections.Counter(to_permute[1:]).values()])
 
         for p, np in self.iter_permutation_resonant(to_permute):
 

@@ -269,7 +269,7 @@ def test_resonant_damping_2s_beta():
 
     # TODO: no damping on the static value?
     b0 = system_2s.response_tensor_element_f((0, 0, 0), [0, 0, 0])
-    print(b0, beta_w_g(num, w0, 0, 0))
+    assert numpy.allclose(b0, beta_w_g(num, w0, 0, 0))
 
     for w in [.1, .2, .3, .35]:
         bwg = system_2s.response_tensor_element_g((0, 0, 0), [-2 * w, w, w], damping=damping)
@@ -296,7 +296,7 @@ def test_resonant_damping_2s_beta():
         assert numpy.allclose(beta_w_g(num, w0, w, damping), bwgf)
         assert numpy.allclose(beta_w_g2(num, w0, w0, w, damping, damping), bwgf)
         assert numpy.allclose(beta_w_gx(num, w0, w, damping), bwgf)
-        # assert numpy.allclose(bwgf / b0, f_berkovic(w0, w, damping))
+        assert numpy.allclose(bwgf / b0, f_berkovic(w0, w, damping))
 
         assert not numpy.allclose(bwg, bwgf)
 
