@@ -1,5 +1,9 @@
+import pathlib
+import itertools
 import numpy
 import io
+
+import pytest
 
 from sos.system import System, SOSMethod
 
@@ -20,9 +24,10 @@ def test_read_system():
     # 2-state
     system_2s_def = """1
     1 0.7
-    0 0 1.0 0.0 0.0
-    0 1 1.5 0.0 0.0
-    1 1 2.0 0.0 0.0"""
+    {}""".format('\n'.join(
+        '{} {} {:.3f} {:.3f} {:.3f}'.format(
+            p[0], p[1], *t_dips_2s[*p]) for p in itertools.combinations_with_replacement(range(2), 2)
+    ))
 
     f = io.StringIO(system_2s_def)
 
@@ -35,12 +40,10 @@ def test_read_system():
     system_3s_def = """2
     1 0.7
     2 0.9
-    0 0 1. .5 0
-    0 1 1.5 0 0
-    0 2 .5 .5 0
-    1 1 2. 0 .5
-    1 2 .25 0 0
-    2 2 1.5 0 .5"""
+    {}""".format('\n'.join(
+        '{} {} {:.3f} {:.3f} {:.3f}'.format(
+            p[0], p[1], *t_dips_3s[*p]) for p in itertools.combinations_with_replacement(range(3), 2)
+    ))
 
     f = io.StringIO(system_3s_def)
 
@@ -50,16 +53,25 @@ def test_read_system():
     assert numpy.allclose(system.t_dips, t_dips_3s)
 
 
-def test_non_resonant_divergent():
+@pytest.fixture
+def system_2s():
+    with (pathlib.Path(__file__).parent / '2-state.txt').open() as f:
+        return System.from_file(f)
+
+
+@pytest.fixture
+def system_3s():
+    with (pathlib.Path(__file__).parent / '3-state.txt').open() as f:
+        return System.from_file(f)
+
+
+def test_non_resonant_divergent(system_2s, system_3s):
     """
     Test the divergent cases (general formula vs fluctuation dipole with divergent formula for secular terms),
     so check against harmonic generation
     """
 
-    system_2s = System([.7, ], t_dips_2s)
-    system_3s = System([.7, .9], t_dips_3s)
-
-    w = .1
+    w = .02
 
     for n in range(1, 6):
         fields = tuple(1 for _ in range(n))
@@ -76,15 +88,12 @@ def test_non_resonant_divergent():
         )
 
 
-def test_non_resonant_non_divergent():
+def test_non_resonant_non_divergent(system_2s, system_3s):
     """
     Test the non-divergent case (fluctuation dipole with divergent vs non-divergent formula for secular terms).
     """
 
-    system_2s = System([.7, ], t_dips_2s)
-    system_3s = System([.7, .9], t_dips_3s)
-
-    w = .1
+    w = .02
 
     for n in range(1, 5):
         fields = tuple(1 for _ in range(n))
@@ -101,13 +110,11 @@ def test_non_resonant_non_divergent():
         )
 
 
-def test_non_divergent_not_harmonic_generation():
+def test_non_divergent_not_harmonic_generation(system_3s):
     """Check that non-divergent formula holds (i.e., nothing is infinite) when the process involves a static field
     """
 
-    system_3s = System([.7, .9], t_dips_3s)
-
-    w = .1
+    w = .02
 
     for fields in [(0, 0, 0), (1, 0, 0), (1, 1, 0), (1, -1, 1)]:
         print(fields)
@@ -116,15 +123,12 @@ def test_non_divergent_not_harmonic_generation():
         assert all(x != numpy.inf for x in t.flatten())
 
 
-def test_resonant_divergent_no_damping():
+def test_resonant_divergent_no_damping(system_2s, system_3s):
     """
     Check that resonant and non-resonant formula provide the same result if damping is 0
     """
 
-    system_2s = System([.7, ], t_dips_2s)
-    system_3s = System([.7, .9], t_dips_3s)
-
-    w = .1
+    w = .02
 
     for n in range(1, 5):
         fields = tuple(1 for _ in range(n))
@@ -149,15 +153,12 @@ def test_resonant_divergent_no_damping():
         assert numpy.allclose(tr3s.imag, 0)
 
 
-def test_resonant_fluctuation_no_damping():
+def test_resonant_fluctuation_no_damping(system_2s, system_3s):
     """
     Check that general and fluctuation formula provide the same result if damping is 0
     """
 
-    system_2s = System([.7, ], t_dips_2s)
-    system_3s = System([.7, .9], t_dips_3s)
-
-    w = .1
+    w = .02
 
     for n in range(1, 5):
         fields = tuple(1 for _ in range(n))
@@ -174,13 +175,10 @@ def test_resonant_fluctuation_no_damping():
         )
 
 
-def test_resonant_damping_2s_alpha():
+def test_resonant_damping_2s_alpha(system_2s):
     """
     Check that general and fluctuation formula give the same result if damping is not 0, for alpha.
     """
-
-    w0 = .7
-    system_2s = System([w0, ], t_dips_2s)
 
     damping = 1e-2
 
@@ -301,15 +299,12 @@ def test_resonant_damping_2s_beta():
         assert not numpy.allclose(bwg, bwgf)
 
 
-def test_resonant_fluctuation_damping():
+def test_resonant_fluctuation_damping(system_2s, system_3s):
     """
     Check that both fluctuation formula (with and without divergent secular terms) provide the same result
     """
 
-    system_2s = System([.7, ], t_dips_2s)
-    system_3s = System([.7, .9], t_dips_3s)
-
-    w = .1
+    w = .02
     damping = 1e-1
 
     for n in range(1, 5):
@@ -327,15 +322,13 @@ def test_resonant_fluctuation_damping():
         )
 
 
-def test_resonant_non_divergent_not_harmonic_generation():
+def test_resonant_non_divergent_not_harmonic_generation(system_3s):
     """Check that in the case of resonant formula, using divergent and non-divergent actually provide the same result.
 
     TODO: ... But should that be the case?
     """
 
-    system_3s = System([.7, .9], t_dips_3s)
-
-    w = .1
+    w = .02
     damping = 1e-1
 
     for fields in [(0, 0, 0), (1, 0, 0), (1, 1, 0), (1, -1, 1)]:
