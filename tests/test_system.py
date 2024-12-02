@@ -306,11 +306,14 @@ def response_tensor_element_gamma(t_dips, e_exci, component: tuple, e_fields, da
     """Implement the gamma response according to Orr and Ward
     """
 
+    def _fluct(td, s0, s1, x):
+        return td[s0, s1, x] + (-td[0, 0, x] if s0 == s1 else 0)
+
     assert len(component) == 4
     assert len(component) == len(e_fields)
 
     value = .0
-    # imag_part = damping * 1j
+    iG = damping * 1j
 
     to_permute = list(zip(component, e_fields))
     num_perm = numpy.prod([math.factorial(i) for i in collections.Counter(to_permute[1:]).values()])
@@ -319,49 +322,55 @@ def response_tensor_element_gamma(t_dips, e_exci, component: tuple, e_fields, da
         p = [to_permute[0]] + list(sp)
 
         for states in itertools.product(range(1, len(e_exci)), repeat=3):
-            # TODO: image
-            # TODO: fluctuation only if states[0] == states[1]
 
-            n = t_dips[0, states[0], p[0][0]] * (t_dips[states[0], states[1], p[3][0]] - t_dips[0, 0, p[3][0]]) * (t_dips[states[1], states[2], p[2][0]] - t_dips[0, 0, p[2][0]]) * t_dips[states[2], 0, p[1][0]]  # noqa
-            d = (e_exci[states[0]] + p[0][1]) * (e_exci[states[1]] - p[1][1] - p[2][1]) * (e_exci[states[2]] - p[1][1])  # noqa
+            n = t_dips[0, states[0], p[0][0]] * _fluct(t_dips, states[0], states[1], p[3][0]) * _fluct(t_dips, states[1], states[2], p[2][0]) * t_dips[states[2], 0, p[1][0]]  # noqa
+            d = (e_exci[states[0]] - iG + p[0][1]) * (e_exci[states[1]] - iG - p[1][1] - p[2][1]) * (e_exci[states[2]] - iG - p[1][1])  # noqa
 
             value += n / d
 
-            n = t_dips[0, states[0], p[1][0]] * (t_dips[states[0], states[1], p[0][0]] - t_dips[0, 0, p[0][0]]) * (t_dips[states[1], states[2], p[2][0]] - t_dips[0, 0, p[2][0]]) * t_dips[states[2], 0, p[1][0]]  # noqa
-            d = (e_exci[states[0]] + p[3][1]) * (e_exci[states[1]] - p[1][1] - p[2][1]) * (e_exci[states[2]] - p[1][1])  # noqa
+            n = t_dips[0, states[0], p[1][0]] * _fluct(t_dips, states[0], states[1], p[0][0]) * _fluct(t_dips, states[1], states[2], p[2][0]) * t_dips[states[2], 0, p[1][0]]  # noqa
+            d = (e_exci[states[0]] + iG + p[3][1]) * (e_exci[states[1]] - iG - p[1][1] - p[2][1]) * (e_exci[states[2]] - iG - p[1][1])  # noqa
 
             value += n / d
 
-            n = t_dips[0, states[0], p[1][0]] * (t_dips[states[0], states[1], p[2][0]] - t_dips[0, 0, p[2][0]]) * (t_dips[states[1], states[2], p[0][0]] - t_dips[0, 0, p[0][0]]) * t_dips[states[2], 0, p[3][0]]  # noqa
-            d = (e_exci[states[0]] + p[1][1]) * (e_exci[states[1]] + p[1][1] + p[2][1]) * (e_exci[states[2]] - p[3][1])  # noqa
+            n = t_dips[0, states[0], p[1][0]] * _fluct(t_dips, states[0], states[1], p[2][0]) * _fluct(t_dips, states[1], states[2], p[0][0]) * t_dips[states[2], 0, p[3][0]]  # noqa
+            d = (e_exci[states[0]] + iG + p[1][1]) * (e_exci[states[1]] + iG + p[1][1] + p[2][1]) * (e_exci[states[2]] - iG - p[3][1])  # noqa
 
             value += n / d
 
-            n = t_dips[0, states[0], p[1][0]] * (t_dips[states[0], states[1], p[2][0]] - t_dips[0, 0, p[2][0]]) * (t_dips[states[1], states[2], p[3][0]] - t_dips[0, 0, p[3][0]]) * t_dips[states[2], 0, p[0][0]]  # noqa
-            d = (e_exci[states[0]] + p[1][1]) * (e_exci[states[1]] + p[1][1] + p[2][1]) * (e_exci[states[2]] - p[0][1])  # noqa
+            n = t_dips[0, states[0], p[1][0]] * _fluct(t_dips, states[0], states[1], p[2][0]) * _fluct(t_dips, states[1], states[2], p[3][0]) * t_dips[states[2], 0, p[0][0]]  # noqa
+            d = (e_exci[states[0]] + iG + p[1][1]) * (e_exci[states[1]] + iG + p[1][1] + p[2][1]) * (e_exci[states[2]] + iG - p[0][1])  # noqa
 
             value += n / d
 
         for states in itertools.product(range(1, len(e_exci)), repeat=2):
             n = t_dips[0, states[0], p[0][0]] * (t_dips[states[0], 0, p[3][0]]) * (t_dips[0, states[1], p[2][0]]) * t_dips[states[1], 0, p[1][0]]  # noqa
-            d = (e_exci[states[0]] + p[0][1]) * (e_exci[states[0]] - p[3][1]) * (e_exci[states[1]] - p[1][1])  # noqa
+            d = (e_exci[states[0]] - iG + p[0][1]) * (e_exci[states[0]] - iG - p[3][1]) * (e_exci[states[1]] - iG - p[1][1])  # noqa
 
             value -= n / d
+
+            print(d)
 
             n = t_dips[0, states[0], p[0][0]] * (t_dips[states[0], 0, p[3][0]]) * (t_dips[0, states[1], p[2][0]]) * t_dips[states[1], 0, p[1][0]]  # noqa
-            d = (e_exci[states[0]] - p[3][1]) * (e_exci[states[1]] + p[2][1]) * (e_exci[states[1]] - p[1][1])  # noqa
+            d = (e_exci[states[0]] - iG - p[3][1]) * (e_exci[states[1]] + iG + p[2][1]) * (e_exci[states[1]] - iG - p[1][1])  # noqa
 
             value -= n / d
+
+            print(d)
 
             n = t_dips[0, states[0], p[3][0]] * (t_dips[states[0], 0, p[0][0]]) * (t_dips[0, states[1], p[1][0]]) * t_dips[states[1], 0, p[2][0]]  # noqa
-            d = (e_exci[states[0]] - p[0][1]) * (e_exci[states[0]] + p[3][1]) * (e_exci[states[1]] + p[1][1])  # noqa
+            d = (e_exci[states[0]] + iG - p[0][1]) * (e_exci[states[0]] + iG + p[3][1]) * (e_exci[states[1]] + iG + p[1][1])  # noqa
 
             value -= n / d
+
+            print(d)
 
             n = t_dips[0, states[0], p[3][0]] * (t_dips[states[0], 0, p[0][0]]) * (t_dips[0, states[1], p[1][0]]) * t_dips[states[1], 0, p[2][0]]  # noqa
-            d = (e_exci[states[0]] + p[3][1]) * (e_exci[states[1]] - p[2][1]) * (e_exci[states[1]] + p[1][1])  # noqa
+            d = (e_exci[states[0]] + iG + p[3][1]) * (e_exci[states[1]] - iG - p[2][1]) * (e_exci[states[1]] + iG + p[1][1])  # noqa
 
             value -= n / d
+
+            print(d)
 
     return value * num_perm
 
@@ -369,13 +378,18 @@ def response_tensor_element_gamma(t_dips, e_exci, component: tuple, e_fields, da
 def test_resonant_damping_gamma(system_2s, system_3s):
     """Check that my implementation matches Orr and Ward"""
 
-    w = .02
+    w = .01
     e_fields = [-3 * w, w, w, w]
-    damping = 0
+    damping = 1e-3
 
     print(
-        system_2s.response_tensor_element_f((2, 2, 2, 2), e_fields, damping),
+        system_2s.response_tensor_element_f((2, 2, 2, 2), e_fields, damping, use_divergent=True),
         response_tensor_element_gamma(system_2s.t_dips, system_2s.e_exci, (2, 2, 2, 2), e_fields, damping)
+    )
+
+    print(
+        system_3s.response_tensor_element_f((2, 2, 2, 2), e_fields, damping, use_divergent=True),
+        response_tensor_element_gamma(system_3s.t_dips, system_3s.e_exci, (2, 2, 2, 2), e_fields, damping)
     )
 
 

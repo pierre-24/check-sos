@@ -531,7 +531,11 @@ class System:
                     self.e_exci[e] + sum(p[j][1] for j in range(i + 1)) for i, e in enumerate(states)
                 ]
 
-                ens = [x + (-imag_part if i >= np else imag_part) for i, x in enumerate(ens)]  # add imaginary part
+                ens = [
+                    x + (-imag_part if i >= np else imag_part) for i, x in enumerate(ens)
+                ]  # add imaginary part
+
+                print(states, numpy.prod(ens))
 
                 value += numpy.prod(dips) / numpy.prod(ens)
 
