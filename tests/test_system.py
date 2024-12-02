@@ -2,6 +2,9 @@ import pathlib
 import itertools
 import numpy
 import io
+import math
+import collections
+import more_itertools
 
 import pytest
 
@@ -297,6 +300,83 @@ def test_resonant_damping_2s_beta():
         assert numpy.allclose(bwgf / b0, f_berkovic(w0, w, damping))
 
         assert not numpy.allclose(bwg, bwgf)
+
+
+def response_tensor_element_gamma(t_dips, e_exci, component: tuple, e_fields, damping: float = 0) -> float:
+    """Implement the gamma response according to Orr and Ward
+    """
+
+    assert len(component) == 4
+    assert len(component) == len(e_fields)
+
+    value = .0
+    # imag_part = damping * 1j
+
+    to_permute = list(zip(component, e_fields))
+    num_perm = numpy.prod([math.factorial(i) for i in collections.Counter(to_permute[1:]).values()])
+
+    for sp in more_itertools.unique_everseen(itertools.permutations(to_permute[1:])):  # I_{1,2,3}
+        p = [to_permute[0]] + list(sp)
+
+        for states in itertools.product(range(1, len(e_exci)), repeat=3):
+            # TODO: image
+            # TODO: fluctuation only if states[0] == states[1]
+
+            n = t_dips[0, states[0], p[0][0]] * (t_dips[states[0], states[1], p[3][0]] - t_dips[0, 0, p[3][0]]) * (t_dips[states[1], states[2], p[2][0]] - t_dips[0, 0, p[2][0]]) * t_dips[states[2], 0, p[1][0]]  # noqa
+            d = (e_exci[states[0]] + p[0][1]) * (e_exci[states[1]] - p[1][1] - p[2][1]) * (e_exci[states[2]] - p[1][1])  # noqa
+
+            value += n / d
+
+            n = t_dips[0, states[0], p[1][0]] * (t_dips[states[0], states[1], p[0][0]] - t_dips[0, 0, p[0][0]]) * (t_dips[states[1], states[2], p[2][0]] - t_dips[0, 0, p[2][0]]) * t_dips[states[2], 0, p[1][0]]  # noqa
+            d = (e_exci[states[0]] + p[3][1]) * (e_exci[states[1]] - p[1][1] - p[2][1]) * (e_exci[states[2]] - p[1][1])  # noqa
+
+            value += n / d
+
+            n = t_dips[0, states[0], p[1][0]] * (t_dips[states[0], states[1], p[2][0]] - t_dips[0, 0, p[2][0]]) * (t_dips[states[1], states[2], p[0][0]] - t_dips[0, 0, p[0][0]]) * t_dips[states[2], 0, p[3][0]]  # noqa
+            d = (e_exci[states[0]] + p[1][1]) * (e_exci[states[1]] + p[1][1] + p[2][1]) * (e_exci[states[2]] - p[3][1])  # noqa
+
+            value += n / d
+
+            n = t_dips[0, states[0], p[1][0]] * (t_dips[states[0], states[1], p[2][0]] - t_dips[0, 0, p[2][0]]) * (t_dips[states[1], states[2], p[3][0]] - t_dips[0, 0, p[3][0]]) * t_dips[states[2], 0, p[0][0]]  # noqa
+            d = (e_exci[states[0]] + p[1][1]) * (e_exci[states[1]] + p[1][1] + p[2][1]) * (e_exci[states[2]] - p[0][1])  # noqa
+
+            value += n / d
+
+        for states in itertools.product(range(1, len(e_exci)), repeat=2):
+            n = t_dips[0, states[0], p[0][0]] * (t_dips[states[0], 0, p[3][0]]) * (t_dips[0, states[1], p[2][0]]) * t_dips[states[1], 0, p[1][0]]  # noqa
+            d = (e_exci[states[0]] + p[0][1]) * (e_exci[states[0]] - p[3][1]) * (e_exci[states[1]] - p[1][1])  # noqa
+
+            value -= n / d
+
+            n = t_dips[0, states[0], p[0][0]] * (t_dips[states[0], 0, p[3][0]]) * (t_dips[0, states[1], p[2][0]]) * t_dips[states[1], 0, p[1][0]]  # noqa
+            d = (e_exci[states[0]] - p[3][1]) * (e_exci[states[1]] + p[2][1]) * (e_exci[states[1]] - p[1][1])  # noqa
+
+            value -= n / d
+
+            n = t_dips[0, states[0], p[3][0]] * (t_dips[states[0], 0, p[0][0]]) * (t_dips[0, states[1], p[1][0]]) * t_dips[states[1], 0, p[2][0]]  # noqa
+            d = (e_exci[states[0]] - p[0][1]) * (e_exci[states[0]] + p[3][1]) * (e_exci[states[1]] + p[1][1])  # noqa
+
+            value -= n / d
+
+            n = t_dips[0, states[0], p[3][0]] * (t_dips[states[0], 0, p[0][0]]) * (t_dips[0, states[1], p[1][0]]) * t_dips[states[1], 0, p[2][0]]  # noqa
+            d = (e_exci[states[0]] + p[3][1]) * (e_exci[states[1]] - p[2][1]) * (e_exci[states[1]] + p[1][1])  # noqa
+
+            value -= n / d
+
+    return value * num_perm
+
+
+def test_resonant_damping_gamma(system_2s, system_3s):
+    """Check that my implementation matches Orr and Ward"""
+
+    w = .02
+    e_fields = [-3 * w, w, w, w]
+    damping = 0
+
+    print(
+        system_2s.response_tensor_element_f((2, 2, 2, 2), e_fields, damping),
+        response_tensor_element_gamma(system_2s.t_dips, system_2s.e_exci, (2, 2, 2, 2), e_fields, damping)
+    )
 
 
 def test_resonant_fluctuation_damping(system_2s, system_3s):
