@@ -51,7 +51,7 @@ sos-create-system tests/CT_dipoles.txt -t .05 -T .01 -m 0.2
 Inputs are:
 
 + An input file, which contains a list of CT dipoles (3 space-separated values per line: `X Y Z`).
-+ `-t`, `-T`, and `-m`: the values for $t$, $T$ and $m_{CT}$, as described in Section 2.3 of [this document](white-papers/few-states.pdf). All in atomic units.
++ `-t`, `-T`, and `-m`: the values for $t$, $T$, and $m_{CT}$, as described in Section 2.3 of [this document](white-papers/few-states.pdf). All in atomic units.
 + `--eV` to output energies in eV rather than atomic unit.
 
 The output is a text file for SOS in the MultiWFN format, which can thus be used by `sos-get-tensor`.

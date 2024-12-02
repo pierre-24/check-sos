@@ -118,7 +118,7 @@ In practice, for $n=1$, Eq.~\eqref{eq:resonant:fluct:nonsecular} gives explicitl
 
 For $n>2$, one again needs to include the extra secular terms, and since  Theorem~\ref{th:1}  remain valid, one obtains the following non-divergent version:\begin{align}
 	&\left. X^{(n,+)} \right|_{\ket{a_j} = \ket{0}} = -\frac{1}{2\hbar^n} \sum_{\mathcal{P}_I} \sum_{\mathcal{P}_C}\sum_{a_1', a_2', \ldots} \sum_{0 < i \neq j \leq n} \nonumber\\
-	&\hspace{2em}\frac{(\zeta \bar{\eta} \ldots \kappa)_{a_1 a_2 \ldots a_{j-1}} (\xi \bar{\tau} \ldots \nu)_{a_{j+1} \ldots a_n}}{\prod_{0 < l \neq j \leq \mathcal C \leq i} (\Omega'_{a_l})^\star \prod_{ \mathcal C < l \neq j \leq i} (\Omega'_{a_l}) \prod_{i \leq l \neq j \leq  \mathcal C} (\Omega'_{a_l} + x)^\star \prod_{i\leq \mathcal C \leq l \neq j \leq  n} (\Omega'_{a_l} + x)}, \label{eq:resonant:sec:nondiv}
+	&\hspace{2em}\frac{(\zeta \bar{\eta} \ldots \kappa)_{a_1 a_2 \ldots a_{j-1}} (\xi \bar{\tau} \ldots \nu)_{a_{j+1} \ldots a_n}}{\prod_{ \mathcal C \leq i \land 0 < l \neq j \leq \mathcal C } (\Omega'_{a_l})^\star \prod_{ \mathcal C < l \neq j \leq i} (\Omega'_{a_l}) \prod_{i \leq l \neq j \leq  \mathcal C} (\Omega'_{a_l} + x)^\star \prod_{ \mathcal C > i \land \mathcal C \leq l \neq j \leq  n} (\Omega'_{a_l} + x)}, \label{eq:resonant:sec:nondiv}
 \end{align}
 which, while a bit convoluted,\footnote{And not exactly readable.} provide the correct expression for such extra terms. $x$ retains the same meaning as in Eq.~\eqref{eq:sec:nondiv}. However, (???).
 
@@ -127,7 +127,7 @@ which, while a bit convoluted,\footnote{And not exactly readable.} provide the c
 For the non-resonant version, after theses formula have been implemented, comparisons between Eq.~\eqref{eq:1:sos} and Eq.~\eqref{eq:fluct} have been successfully conducted to get tensors, $X^{(n)}$ corresponding to $n$\textsuperscript{th}-harmonic generation process (where all $\omega_i = \omega$), within both two- and three-state models.
 It was performed up to  $n = 5$ with divergent secular terms (which includes a secular term where $\ket{a_2} = \ket{a_4} = \ket{0}$), and up to $n=4$ with non-divergent secular terms [using Eq.~\eqref{eq:sec:nondiv}]. Then, different tensors corresponding to NLO processes which include a static field where tested with $n=3$ (static, dc-kerr, DFWM, and EFISHG) using Eq.~\eqref{eq:sec:nondiv} and a three-state model. No sign of divergence where found.
 
-The resonant version was also implemented [using Eq.~\eqref{eq:resonant:fluct:nonsecular} in Eq.~\eqref{eq:fluct}], and compared to the work of Berkovic \textit{et al.} for SHG \cite{berkovicMeasurementAnalysisMolecular2000}. It was also compared to non-resonant version when setting $\Gamma = 0$.
+The resonant version was also implemented [using Eqs.~\eqref{eq:resonant:fluct:nonsecular} and \eqref{eq:resonant:sec:nondiv} in Eq.~\eqref{eq:fluct}], and compared to the work of Berkovic \textit{et al.} for SHG \cite{berkovicMeasurementAnalysisMolecular2000}. It was also compared to non-resonant version when setting $\Gamma = 0$.
 
 
 

@@ -456,7 +456,7 @@ class System:
     def response_tensor_element_f(
             self, component: tuple, e_fields: List[float], damping: float = 0, use_divergent: bool = False) -> float:
         """Compute the value of a component of a (resonant) response tensor, using Eq. (6),
-        but with Eq. (10) to provide a resonant version. Works up to n=4.
+        but with Eqs. (10) and (11) to provide a resonant version. Works up to n=4.
         """
 
         assert len(component) == len(e_fields)
@@ -539,7 +539,7 @@ class System:
 
     def _secular_term_non_divergent(
             self, component: tuple, e_fields: List[float], set_ground: int, damping: float = 0) -> float:
-        """Provide a non-divergent secular term. Essentially, it is a translation of Eq. (9).
+        """Provide a non-divergent secular term, implements Eq. (10).
         """
 
         value = .0
