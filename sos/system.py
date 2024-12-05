@@ -447,7 +447,9 @@ class System:
                     self.e_exci[e] + sum(p[j][1] for j in range(i + 1)) for i, e in enumerate(states)
                 ]
 
-                ens = [x + (-imag_part if i >= np else imag_part) for i, x in enumerate(ens)]  # add imaginary part
+                ens = [
+                    x + (0 if states[i] == 0 else (-imag_part if i >= np else imag_part)) for i, x in enumerate(ens)
+                ]  # add imaginary part
 
                 value += numpy.prod(dips) / numpy.prod(ens)
 
@@ -462,7 +464,7 @@ class System:
         assert len(component) == len(e_fields)
         assert len(e_fields) < 6
 
-        value = .0
+        value_p = .0
         imag_part = damping * 1j
 
         to_permute = list(zip(component, e_fields))
@@ -488,16 +490,17 @@ class System:
 
                 ens = [x + (-imag_part if i >= np else imag_part) for i, x in enumerate(ens)]  # add imaginary part
 
-                value += numpy.prod(dips) / numpy.prod(ens)
+                value_p += numpy.prod(dips) / numpy.prod(ens)
 
+        value_m = .0
         if len(component) > 3:
             for set_g in range(1, len(component) - 2):
                 if use_divergent:
-                    value += self._secular_term_divergent(component, e_fields, (set_g,), damping=damping)
+                    value_m += self._secular_term_divergent(component, e_fields, (set_g,), damping=damping)
                 else:
-                    value += self._secular_term_non_divergent(component, e_fields, set_g)
+                    value_m += self._secular_term_non_divergent(component, e_fields, set_g)
 
-        return value * num_perm
+        return (value_p + value_m) * num_perm
 
     def _secular_term_divergent(
             self, component: tuple, e_fields: List[float], set_ground: tuple, damping: float = 0) -> float:
@@ -532,10 +535,8 @@ class System:
                 ]
 
                 ens = [
-                    x + (-imag_part if i >= np else imag_part) for i, x in enumerate(ens)
+                    x + (0 if i in set_ground else (-imag_part if i >= np else imag_part)) for i, x in enumerate(ens)
                 ]  # add imaginary part
-
-                print(states, numpy.prod(ens))
 
                 value += numpy.prod(dips) / numpy.prod(ens)
 
