@@ -5,6 +5,7 @@ import io
 import math
 import collections
 import more_itertools
+import sympy
 
 import pytest
 
@@ -434,3 +435,19 @@ def test_resonant_non_divergent_not_harmonic_generation(system_3s):
             system_3s.response_tensor_resonant(fields, w, method=SOSMethod.FLUCT_DIVERGENT, damping=damping),
             system_3s.response_tensor_resonant(fields, w, method=SOSMethod.FLUCT_NON_DIVERGENT, damping=damping)
         )
+
+
+def test_sympy():
+    m00, m01, m11 = sympy.symbols('m00 m01 m11')
+    w = sympy.symbols('omega')
+    wge = sympy.Symbol('omega_ge', real=True)
+    iG = sympy.Symbol('Gamma', real=True) * sympy.I
+
+    def beta(num, _wge0, _wge1):
+        return 2 * num * (1 / ((_wge0 - 2 * w) * (_wge1 - w)) + 1 / ((_wge0.conjugate() + w) * (_wge1 - w)) + 1 / ((_wge0.conjugate() + w) * (_wge1.conjugate() + 2 * w)))  # noqa
+
+    nonfluc_formula = beta(m00 ** 3, 0, 0) + beta(m01 ** 2 * m00, wge - iG, 0) + beta(m01 ** 2 * m00, 0, wge - iG) + beta(m01 ** 2 * m11, wge - iG, wge - iG)  # noqa
+
+    diff = sympy.simplify(beta(m01 ** 2 * (m11 - m00), wge - iG, wge - iG) - nonfluc_formula)
+
+    print(sympy.latex(diff))
