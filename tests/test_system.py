@@ -285,8 +285,6 @@ def test_resonant_damping_2s_beta():
 
         bwgf = system_2s.response_tensor_element_f((0, 0, 0), [-2 * w, w, w], damping=damping)
 
-        print(bwg, bwgf)
-
         assert numpy.allclose(beta_w_g(num, w0, w, damping), bwgf)
         assert numpy.allclose(beta_w_g2(num, w0, w0, w, damping, damping), bwgf)
         assert numpy.allclose(beta_w_gx(num, w0, w, damping), bwgf)
@@ -367,11 +365,6 @@ def test_resonant_damping_gamma(system_2s, system_3s):
     w = .01
     e_fields = [-3 * w, w, w, w]
     damping = 1e-2
-
-    print(
-        system_2s.response_tensor_element_g((2, 2, 2, 2), e_fields, damping),
-        system_2s.response_tensor_element_g((2, 2, 2, 2), [-w for w in e_fields], damping),
-    )
 
     print(
         system_2s.response_tensor_element_f((2, 2, 2, 2), e_fields, damping, use_divergent=True),
