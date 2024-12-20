@@ -13,17 +13,10 @@ class ComponentsIterator:
     """Iterate over (unique) components of a NLO tensor
     """
 
-    def __init__(self, input_fields: Iterable[int], use_full: bool = True):
-        assert all(type(x) is int for x in input_fields)
-
+    def __init__(self, input_fields: Iterable[int]):
         self.fields = [-sum(input_fields)] + list(input_fields)
-        self._f = self.fields.copy()
 
-        # small trick to differentiate \omega_\sigma from the rest if intrinsic
-        if not use_full:
-            self._f[0] = 's'
-
-        self.each = collections.Counter(self._f)
+        self.each = collections.Counter(self.fields)
         self.last = {}
 
         # prepare a ideal→actual map
@@ -34,7 +27,7 @@ class ComponentsIterator:
             self.last[c] = N
             N += n
 
-        for i, field in enumerate(self._f):
+        for i, field in enumerate(self.fields):
             self.ideal_to_actual[i] = self.last[field]
             self.last[field] += 1
 
@@ -78,7 +71,7 @@ class ComponentsIterator:
 
         # fetch components for each type of fields
         c_with_field = dict((f, []) for f in self.each.keys())
-        for i, field in enumerate(self._f):
+        for i, field in enumerate(self.fields):
             c_with_field[field].append(component[i])
 
         # permute
@@ -224,7 +217,7 @@ class System:
             SOSMethod.FLUCT_NON_DIVERGENT: lambda c_, e_, d_: self.response_tensor_element_f(c_, e_, d_, False)
         }[method]
 
-        it = ComponentsIterator(input_fields, use_full=False)
+        it = ComponentsIterator(input_fields)
         t = numpy.zeros(numpy.repeat(3, len(it.fields)), dtype=complex)
         e_fields = list(i * frequency for i in it.fields)
 
