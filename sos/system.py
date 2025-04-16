@@ -162,11 +162,11 @@ class System:
     def to_file(self, f: TextIO):
         f.write('{}\n'.format(len(self) - 1))
         for i, e in enumerate(self.e_exci[1:]):
-            f.write('{} {:.7f}\n'.format(i + 1, e))
+            f.write('{:8} {:15.7f}\n'.format(i + 1, e))
 
         for i in range(len(self)):
-            for j in range(0, i + 1):
-                f.write('{} {} {:.7f} {:.7f} {:.7f}\n'.format(i, j, *self.t_dips[i, j]))
+            for j in range(i, len(self)):
+                f.write('{:8} {:8} {:15.7f} {:15.7f} {:15.7f}\n'.format(i, j, *self.t_dips[i, j]))
 
     def response_tensor(
             self,
