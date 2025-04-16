@@ -5,7 +5,7 @@ import enum
 import more_itertools
 import numpy
 
-from typing import List, Iterable, Self, TextIO
+from typing import List, Iterable, Self, TextIO, Iterator, Tuple
 from numpy.typing import NDArray
 
 
@@ -84,9 +84,9 @@ class ComponentsIterator:
 
 
 class SOSMethod(enum.Enum):
-    GENERAL = enum.auto
-    FLUCTUATION_DIVERGENT = enum.auto
-    FLUCTUATION_NONDIVERGENT = enum.auto
+    GENERAL = enum.auto()
+    FLUCT_DIVERGENT = enum.auto()
+    FLUCT_NON_DIVERGENT = enum.auto()
 
 
 class System:
@@ -172,7 +172,7 @@ class System:
             self,
             input_fields: tuple = (1, 1),
             frequency: float = 0,
-            method: SOSMethod = SOSMethod.FLUCTUATION_NONDIVERGENT
+            method: SOSMethod = SOSMethod.FLUCT_NON_DIVERGENT,
     ) -> NDArray:
         """Get a response tensor, a given SOS formula
         """
@@ -181,9 +181,9 @@ class System:
             raise Exception('input fields is empty?!?')
 
         compute_component = {
-            SOSMethod.GENERAL: self.response_tensor_element_g,
-            SOSMethod.FLUCTUATION_DIVERGENT: self.response_tensor_element_f,
-            SOSMethod.FLUCTUATION_NONDIVERGENT: lambda c_, e_: self.response_tensor_element_f(c_, e_, False)
+            SOSMethod.GENERAL: self.response_tensor_element_nr_g,
+            SOSMethod.FLUCT_DIVERGENT: self.response_tensor_element_nr_f,
+            SOSMethod.FLUCT_NON_DIVERGENT: lambda c_, e_: self.response_tensor_element_nr_f(c_, e_, False)
         }[method]
 
         it = ComponentsIterator(input_fields)
@@ -198,7 +198,44 @@ class System:
 
         return t
 
-    def response_tensor_element_g(self, component: tuple, e_fields: List[float]) -> float:
+    def response_tensor_resonant(
+            self,
+            input_fields: tuple = (1, 1),
+            frequency: float = 0,
+            damping: float = 0,
+            method: SOSMethod = SOSMethod.FLUCT_NON_DIVERGENT,
+    ) -> NDArray:
+        """Get a response tensor, a given SOS formula
+        """
+
+        if len(input_fields) == 0:
+            raise Exception('input fields is empty?!?')
+
+        compute_component = {
+            SOSMethod.GENERAL: self.response_tensor_element_g,
+            SOSMethod.FLUCT_DIVERGENT: self.response_tensor_element_f,
+            SOSMethod.FLUCT_NON_DIVERGENT: lambda c_, e_, d_: self.response_tensor_element_f(c_, e_, d_, False)
+        }[method]
+
+        it = ComponentsIterator(input_fields)
+        t = numpy.zeros(numpy.repeat(3, len(it.fields)), dtype=complex)
+        e_fields = list(i * frequency for i in it.fields)
+
+        for c in it:
+            component = compute_component(c, e_fields, damping)
+
+            for ce in it.reverse(c):
+                t[ce] = component
+
+        return t
+
+    @staticmethod
+    def iter_permutation_non_resonant(to_permute: list) -> Iterator[list]:
+        """Permute components and electric fields for non-resonant cases
+        """
+        yield from more_itertools.unique_everseen(itertools.permutations(to_permute))
+
+    def response_tensor_element_nr_g(self, component: tuple, e_fields: List[float]) -> float:
         """Compute the value of a component of a response tensor, using the most generic formula, Eq. (1) of text.
         """
 
@@ -209,7 +246,7 @@ class System:
         to_permute = list(zip(component, e_fields))
         num_perm = numpy.prod([math.factorial(i) for i in collections.Counter(to_permute).values()])
 
-        for p in more_itertools.unique_everseen(itertools.permutations(to_permute)):
+        for p in self.iter_permutation_non_resonant(to_permute):
             for states in itertools.product(range(0, len(self)), repeat=len(component) - 1):
                 stx = list(states)
                 stx.append(0)
@@ -225,7 +262,8 @@ class System:
 
         return value * num_perm
 
-    def response_tensor_element_f(self, component: tuple, e_fields: List[float], use_divergent: bool = True) -> float:
+    def response_tensor_element_nr_f(
+            self, component: tuple, e_fields: List[float], use_divergent: bool = True) -> float:
         """
         Compute the value of a component of a response tensor, using fluctuation dipoles.
         It corresponds to Eq. (6) of the text.
@@ -242,7 +280,7 @@ class System:
         to_permute = list(zip(component, e_fields))
         num_perm = numpy.prod([math.factorial(i) for i in collections.Counter(to_permute).values()])
 
-        for p in more_itertools.unique_everseen(itertools.permutations(to_permute)):
+        for p in self.iter_permutation_non_resonant(to_permute):
             for states in itertools.product(range(1, len(self)), repeat=len(component) - 1):
                 stx = list(states)
                 stx.append(0)
@@ -264,17 +302,17 @@ class System:
         if len(component) > 3:
             for set_g in range(1, len(component) - 2):
                 if use_divergent:
-                    value += self._secular_term_divergent(component, e_fields, (set_g, ))
+                    value += self._secular_term_nr_divergent(component, e_fields, (set_g,))
                 else:
-                    value += self._secular_term_non_divergent(component, e_fields, set_g)
+                    value += self._secular_term_nr_non_divergent(component, e_fields, set_g)
 
         # ad hoc correction for n=5
         if len(component) == 6 and use_divergent:
-            value += self._secular_term_divergent(component, e_fields, (1, 3))
+            value += self._secular_term_nr_divergent(component, e_fields, (1, 3))
 
         return value * num_perm
 
-    def _secular_term_divergent(self, component: tuple, e_fields: List[float], set_ground: tuple) -> float:
+    def _secular_term_nr_divergent(self, component: tuple, e_fields: List[float], set_ground: tuple) -> float:
         """Compute the additional secular term that happen when n > 2, but using a divergent definition.
 
         Implements parts of the Eq. (8) of the text, by setting in Eq. (7) the term a_i for all i in `set_ground`
@@ -284,7 +322,7 @@ class System:
         value = .0
         to_permute = list(zip(component, e_fields))
 
-        for p in more_itertools.unique_everseen(itertools.permutations(to_permute)):
+        for p in self.iter_permutation_non_resonant(to_permute):
             for states in itertools.product(range(1, len(self)), repeat=len(component) - 1 - len(set_ground)):
                 states = list(states)
 
@@ -310,7 +348,7 @@ class System:
 
         return value
 
-    def _secular_term_non_divergent(self, component: tuple, e_fields: List[float], set_ground: int) -> float:
+    def _secular_term_nr_non_divergent(self, component: tuple, e_fields: List[float], set_ground: int) -> float:
         """Implement Eq. (9) to provide a non-divergent secular term.
         """
 
@@ -318,7 +356,7 @@ class System:
 
         to_permute = list(zip(component, e_fields))
 
-        for p in more_itertools.unique_everseen(itertools.permutations(to_permute)):
+        for p in self.iter_permutation_non_resonant(to_permute):
             x = -sum(p[j][1] for j in range(set_ground + 1))
 
             for states in itertools.product(range(1, len(self)), repeat=len(component) - 2):
@@ -357,6 +395,197 @@ class System:
                             continue
 
                         ens.append(self.e_exci[states[l_]] + sum(p[j][1] for j in range(l_ + 1)) + x)
+
+                    value += numpy.prod(dips) / numpy.prod(ens)
+
+        return -.5 * value
+
+    @staticmethod
+    def iter_permutation_resonant(to_permute: list) -> Iterator[Tuple[list, int]]:
+        """Permute components and electric fields for resonant cases
+        """
+
+        for p in more_itertools.unique_everseen(itertools.permutations(to_permute[1:])):
+            circular_buffer = [to_permute[0]] + list(p)
+
+            for np in range(len(circular_buffer)):
+                yield circular_buffer, np
+
+                # advance circular buffer
+                circular_buffer.insert(0, circular_buffer.pop())
+
+    def response_tensor_element_g(self, component: tuple, e_fields: List[float], damping: float) -> float:
+        """Compute the value of a component of a (resonant) response tensor, using a non-fluctation version of Eq. (9).
+        However, it is **not** equivalent to Eq. (9), since it assumes that the ground state has a lifetime as well.
+        """
+
+        assert len(component) == len(e_fields)
+
+        value = .0
+        imag_part = damping * 1j
+
+        to_permute = list(zip(component, e_fields))
+        num_perm = numpy.prod([math.factorial(i) for i in collections.Counter(to_permute[1:]).values()])
+
+        for states in itertools.product(range(0, len(self)), repeat=len(component) - 1):
+            stx = list(states)
+            stx.append(0)
+            stx.insert(0, 0)
+
+            for p, np in self.iter_permutation_resonant(to_permute):
+
+                dips = [self.t_dips[stx[i], stx[i + 1], p[i][0]] for i in range(len(component))]
+
+                ens = [
+                    self.e_exci[e] + sum(p[j][1] for j in range(i + 1)) for i, e in enumerate(states)
+                ]
+
+                ens = [
+                    x + (0 if states[i] == 0 else (-imag_part if i >= np else imag_part)) for i, x in enumerate(ens)
+                ]  # add imaginary part
+
+                value += numpy.prod(dips) / numpy.prod(ens)
+
+        return value * num_perm
+
+    def response_tensor_element_f(
+            self, component: tuple, e_fields: List[float], damping: float = 0, use_divergent: bool = False) -> float:
+        """Compute the value of a component of a (resonant) response tensor, using Eq. (6),
+        but with Eqs. (10) and (11) to provide a resonant version. Works up to n=4.
+        """
+
+        assert len(component) == len(e_fields)
+        assert len(e_fields) < 6
+
+        value_p = .0
+        imag_part = damping * 1j
+
+        to_permute = list(zip(component, e_fields))
+        num_perm = numpy.prod([math.factorial(i) for i in collections.Counter(to_permute[1:]).values()])
+
+        for p, np in self.iter_permutation_resonant(to_permute):
+
+            for states in itertools.product(range(1, len(self)), repeat=len(component) - 1):
+                stx = list(states)
+                stx.append(0)
+                stx.insert(0, 0)
+
+                dips = [
+                    self.t_dips[stx[i], stx[i + 1], p[i][0]] - (
+                        0 if stx[i] != stx[i + 1]
+                        else self.t_dips[0, 0, p[i][0]]
+                    ) for i in range(len(component))
+                ]
+
+                ens = [
+                    self.e_exci[e] + sum(p[j][1] for j in range(i + 1)) for i, e in enumerate(states)
+                ]
+
+                ens = [x + (-imag_part if i >= np else imag_part) for i, x in enumerate(ens)]  # add imaginary part
+
+                value_p += numpy.prod(dips) / numpy.prod(ens)
+
+        value_m = .0
+        if len(component) > 3:
+            for set_g in range(1, len(component) - 2):
+                if use_divergent:
+                    value_m += self._secular_term_divergent(component, e_fields, (set_g,), damping=damping)
+                else:
+                    value_m += self._secular_term_non_divergent(component, e_fields, set_g)
+
+        return (value_p + value_m) * num_perm
+
+    def _secular_term_divergent(
+            self, component: tuple, e_fields: List[float], set_ground: tuple, damping: float = 0) -> float:
+        """Compute the additional secular term that happen when n > 2, but using a divergent definition.
+        """
+
+        value = .0
+        imag_part = damping * 1j
+
+        to_permute = list(zip(component, e_fields))
+
+        for p, np in self.iter_permutation_resonant(to_permute):
+            for states in itertools.product(range(1, len(self)), repeat=len(component) - 1 - len(set_ground)):
+                states = list(states)
+
+                for g in set_ground:
+                    states.insert(g, 0)
+
+                stx = list(states)
+                stx.append(0)
+                stx.insert(0, 0)
+
+                dips = [
+                    self.t_dips[stx[i], stx[i + 1], p[i][0]] - (
+                        0 if stx[i] != stx[i + 1]
+                        else self.t_dips[0, 0, p[i][0]]
+                    ) for i in range(len(component))
+                ]
+
+                ens = [
+                    self.e_exci[e] + sum(p[j][1] for j in range(i + 1)) for i, e in enumerate(states)
+                ]
+
+                ens = [
+                    x + (0 if i in set_ground else (-imag_part if i >= np else imag_part)) for i, x in enumerate(ens)
+                ]  # add imaginary part
+
+                value += numpy.prod(dips) / numpy.prod(ens)
+
+        return value
+
+    def _secular_term_non_divergent(
+            self, component: tuple, e_fields: List[float], set_ground: int, damping: float = 0) -> float:
+        """Provide a non-divergent secular term, implements Eq. (10).
+        """
+
+        value = .0
+        imag_part = damping * 1j
+
+        to_permute = list(zip(component, e_fields))
+
+        for p, np in self.iter_permutation_resonant(to_permute):
+            x = -sum(p[j][1] for j in range(set_ground + 1))
+
+            for states in itertools.product(range(1, len(self)), repeat=len(component) - 2):
+                states = list(states)
+
+                states.insert(set_ground, 0)
+
+                stx = list(states)
+                stx.append(0)
+                stx.insert(0, 0)
+
+                # numerator of Eq. (9)
+                dips = [
+                    self.t_dips[stx[i], stx[i + 1], p[i][0]] - (
+                        0 if stx[i] != stx[i + 1]
+                        else self.t_dips[0, 0, p[i][0]]
+                    ) for i in range(len(component))
+                ]
+
+                # denominator of Eq. (9)
+                # TODO: there is probably a way to write a nicer code here, without all those `continue`.
+                for i in range(len(component) - 1):
+                    if i == set_ground:
+                        continue
+
+                    ens = []
+
+                    for l_ in range(i + 1):
+                        if l_ == set_ground:
+                            continue
+
+                        ens.append(self.e_exci[states[l_]] + sum(p[j][1] for j in range(l_ + 1)))
+
+                    for l_ in range(i, len(component) - 1):
+                        if l_ == set_ground:
+                            continue
+
+                        ens.append(self.e_exci[states[l_]] + sum(p[j][1] for j in range(l_ + 1)) + x)
+
+                    ens = [x + (-imag_part if i >= np else imag_part) for i, x in enumerate(ens)]  # add imaginary part
 
                     value += numpy.prod(dips) / numpy.prod(ens)
 
